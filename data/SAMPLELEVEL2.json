@@ -1,4 +1,5 @@
-"id": 57436521,
+{
+    "id": 57436521,
     "name": "Sakupen Blue",
     "author": "NoSkill",
     "creators": ["AdrielBomDia"],
@@ -13,3 +14,5 @@
             "percent": 100,
             "hz": 360
         }
+    ] 
+}
