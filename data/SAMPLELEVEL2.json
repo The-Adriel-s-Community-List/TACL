@@ -1,12 +1,15 @@
-{
-    "id": 137070507,
-    "nome": "Sakupen Blue",
-    "autor": "Ad_f",
-    "criadores": [],
-    "criadores": "AdrielBomDia",
-    "verificação": "https://www.youtube.com/watch?v=tRWkvaacgvM",
-    "porcentagem para qualificação": "100",
-    "password": "Free To Copy",
+"id": 57436521,
+    "name": "Sakupen Blue",
+    "author": "NoSkill",
+    "creators": ["AdrielBomDia"],
+    "verifier": "NoSkill",
+    "verification": "https://www.youtube.com/watch?v=tRWkvaacgvM",
+    "percentToQualify": "100",
+    "password": "free to copy",
     "records": [
-    ]
-}
+        {
+            "user": "Sample_Victor_1",
+            "link": "https://www.youtube.com/watch?v=MgJeijBGKHU",
+            "percent": 100,
+            "hz": 360
+        }
