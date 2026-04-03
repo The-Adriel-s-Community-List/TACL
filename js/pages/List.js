@@ -98,7 +98,7 @@ export default {
                             </li>
                         </ol>
                     </template>
-                    <h3>Submission Requirements</h3>
+                    <h3>Instruções de envio</h3>
                     <p>
                         Passar o level de forma legitima sem uso de nenhum hack.
                     </p>
