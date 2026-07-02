@@ -1,0 +1,27 @@
+[
+    {
+        "role": "owner",
+        "name": "AdrielBomDia",
+        "link": "https://www.youtube.com/@adrielpereira1607"
+    },
+    {
+        "role": "admin",
+        "name": "NoSkill",
+        "link": "https://www.youtube.com/@adfrederick"
+    },
+    {
+        "role": "helper",
+        "name": "NoSkill",
+        "link": "https://www.youtube.com/@adfrederick"
+    },
+    {
+        "role": "trial",
+        "name": "NoSkill",
+        "link": "https://www.youtube.com/@adfrederick"
+    },
+    {
+        "role": "dev",
+        "name": "NoSkill",
+        "link": "https://www.youtube.com/@adfrederick"
+    }
+]
