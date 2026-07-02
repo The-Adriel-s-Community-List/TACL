@@ -8,5 +8,10 @@
     "verification": "https://youtu.be/XL_Vn2AhyOs",
     "percentToQualify": "100",
     "password": "free to copy",
-    "records": [ ] 
+    "records": [{
+            "user": "Mamamia898",
+            "link": "https://www.youtube.com/watch?v=VUtMbmBJ0KQ",
+            "percent": 100,
+            "hz": 60
+        } ] 
 }
