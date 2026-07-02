@@ -10,7 +10,7 @@ export default {
         },
         verifier: {
             type: String,
-            required: true,
+            required: false,
         },
     },
     template: `
