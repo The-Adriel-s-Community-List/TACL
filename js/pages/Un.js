@@ -148,8 +148,8 @@ export default {
     },
     async mounted() {
         // Hide loading spinner
-        this.list = await fetchList();
-        this.editors = await fetchEditors();
+        this.list = await fetchList("/unverified");
+        this.editors = await fetchEditors("/unverified");
 
         // Error handling
         if (!this.list) {
