@@ -100,22 +100,20 @@ export default {
                     </template>
                     <h3>Instruções de envio</h3>
                     <p>
-                        Passar o level de forma legitima sem uso de nenhum hack.
+
                     </p>
                     <p>
-                        O vídeo precisa ter ou o áudio original do jogo ou os cliques/toques aparecendo. Só áudio editado não conta.
+
                     </p>
                     <p>
-                        A gravação precisa mostrar o attempt anterior e a animação completa da morte antes do completion — a não ser que a completion tenha sido de primeira tentativa.
+
                     </p>
                     <p>
-                        A gravação também precisa mostrar o jogador encostando no endwall — se não, o completion é invalidado.
+
                     </p>
                     <p>
-                        Não use bug routes ou secret routes (rotas que facilitariam a completion do level
                     </p>
                     <p>
-                        Não use uma versão mais facil/nerfada — só vale record no level original, sem modificação.
                     </p>
                 </div>
             </div>
