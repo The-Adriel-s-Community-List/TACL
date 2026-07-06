@@ -7,5 +7,10 @@
     "verification": "https://www.youtube.com/watch?v=y3CqPmgMPJE&t=37s",
     "percentToQualify": "100",
     "password": "free to copy",
-    "records": [ ] 
+    "records": [ {
+            "user": "Mamamia898",
+            "link": "https://youtu.be/xpMNeOsqrpI",
+            "percent": 100,
+            "hz": 60
+        } ] 
 }
