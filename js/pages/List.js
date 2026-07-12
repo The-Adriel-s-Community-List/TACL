@@ -100,7 +100,7 @@ export default {
                     </template>
                     <h3>Instruções de envio</h3>
                     <p>
-                        Passar o level de forma legitima sem uso de nenhum hack.
+                        Passar o level de forma legitima sem uso de nenhum hack como TPS bypass e Clickbot
                     </p>
                     <p>
                         O vídeo precisa ter ou o áudio original do jogo ou os cliques/toques aparecendo. Só áudio editado não conta.
