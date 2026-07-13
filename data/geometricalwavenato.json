@@ -7,5 +7,10 @@
     "verification": "https://youtu.be/4ww-H9k2e_o?is=mOBvZdK1uSzKjNKN",
     "percentToQualify": "100",
     "password": "Free to Copy",
-    "records": [ ]
+    "records": [{
+            "user": "adrielbomdia",
+            "link": "https://youtu.be/7BzsrktKZEA?is=Z9dTOg43PhVNhBsg",
+            "percent": 100,
+            "hz": 120
+        } ]
 }
