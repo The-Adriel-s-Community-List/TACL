@@ -1,4 +1,7 @@
-import { fetchLeaderboard } from '../content.js';
+import {
+    fetchLeaderboard,
+    fetchCreatorLeaderboard,
+} from '../content.js';
 import { localize } from '../util.js';
 
 import Spinner from '../components/Spinner.js';
@@ -8,16 +11,29 @@ export default {
         Spinner,
     },
     data: () => ({
-        leaderboard: [],
-        loading: true,
-        selected: 0,
-        err: [],
+    leaderboard: [],
+    creatorLeaderboard: [],
+    mode: "players",
+    loading: true,
+    selected: 0,
+    err: [],
     }),
     template: `
         <main v-if="loading">
-            <Spinner></Spinner>
-        </main>
-        <main v-else class="page-leaderboard-container">
+    <Spinner></Spinner>
+</main>
+
+<main v-else>
+
+<div class="leaderboard-tabs">
+    <button @click="mode = 'players'; selected = 0">
+        Players
+    </button>
+
+    <button @click="mode = 'creators'; selected = 0">
+        Creators
+    </button>
+       </div>
             <div class="page-leaderboard">
                 <div class="error-container">
                     <p class="error" v-if="err.length > 0">
@@ -26,7 +42,7 @@ export default {
                 </div>
                 <div class="board-container">
                     <table class="board">
-                        <tr v-for="(ientry, i) in leaderboard">
+                        <tr v-for="(ientry, i) in currentLeaderboard">
                             <td class="rank">
                                 <p class="type-label-lg">#{{ i + 1 }}</p>
                             </td>
@@ -35,14 +51,21 @@ export default {
                             </td>
                             <td class="user" :class="{ 'active': selected == i }">
                                 <button @click="selected = i">
-                                    <span class="type-label-lg">{{ ientry.user }}</span>
+                                    <span class="type-label-lg">{{ ientry.user || ientry.creator }}</span>
                                 </button>
                             </td>
                         </tr>
                     </table>
                 </div>
-                <div class="player-container">
-                    <div class="player">
+               <div class="player-container">
+
+    <!-- PLAYER LEADERBOARD -->
+    <div class="player" v-if="mode === 'players'">
+
+
+
+        <!-- TODO O CONTEÚDO ANTIGO DE PLAYERS FICA AQUI -->
+
                         <h1>#{{ selected + 1 }} {{ entry.user }}</h1>
                         <h3>{{ entry.total }}</h3>
                         <h2 v-if="entry.verified.length > 0">Verified ({{ entry.verified.length}})</h2>
@@ -87,23 +110,75 @@ export default {
                                 </td>
                             </tr>
                         </table>
-                    </div>
+                 </div>
+
+    <!-- CREATOR LEADERBOARD -->
+    <div class="player" v-else>
+
+        <h1>
+            #{{ selected + 1 }}
+            {{ entry.creator }}
+        </h1>
+
+        <h3>
+            {{ entry.total }} CP
+        </h3>
+
+        <table class="table">
+
+            <tr v-for="level in entry.levels">
+
+                <td class="level">
+                    <a
+                        class="type-label-lg"
+                        target="_blank"
+                        :href="level.verification"
+                    >
+                        {{ level.level }}
+                    </a>
+                </td>
+
+                <td>
+                    {{ level.rating }}
+                </td>
+
+                <td class="score">
+                    +{{ level.points }} CP
+                </td>
+
+            </tr>
+
+        </table>
+
+    </div>
+
+</div>
                 </div>
             </div>
         </main>
+
     `,
     computed: {
-        entry() {
-            return this.leaderboard[this.selected];
-        },
+    currentLeaderboard() {
+        return this.mode === "players"
+            ? this.leaderboard
+            : this.creatorLeaderboard;
     },
+
+    entry() {
+        return this.currentLeaderboard[this.selected];
+    },
+},
     async mounted() {
-        const [leaderboard, err] = await fetchLeaderboard();
-        this.leaderboard = leaderboard;
-        this.err = err;
-        // Hide loading spinner
-        this.loading = false;
-    },
+    const [leaderboard, err] = await fetchLeaderboard();
+
+    this.leaderboard = leaderboard;
+    this.err = err;
+
+    this.creatorLeaderboard = await fetchCreatorLeaderboard();
+
+    this.loading = false;
+},
     methods: {
         localize,
     },
