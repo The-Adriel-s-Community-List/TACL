@@ -140,14 +140,13 @@ export async function fetchCreatorLeaderboard() {
     list.forEach(([level, err]) => {
         if (err) return;
 
-        // Se não tiver rating, vale 0 CP
-const totalPoints =
+// Se não tiver rating, vale 0 CP
+const points =
     creatorPointMap[level.rating?.toLowerCase()] || 0;
 
-        // Se não tiver criadores ou não valer pontos, ignora
-        if (!level.creators || level.creators.length === 0 || totalPoints === 0)
-            return;
-
+// Se não tiver criadores ou não valer pontos, ignora
+if (!level.creators || level.creators.length === 0 || points === 0)
+    return;
 
         level.creators.forEach((creator) => {
             creatorMap[creator] ??= {
