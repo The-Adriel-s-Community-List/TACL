@@ -203,8 +203,14 @@
     }
 }
 .cp-icon {
-    width: 1.4rem;
-    height: 1.4rem;
+    width: 22px;
+    height: 22px;
     vertical-align: middle;
-    margin-left: 0.3rem;
+    margin-left: 4px;
+}
+.creator-points {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 5px;
 }
