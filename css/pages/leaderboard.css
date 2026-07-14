@@ -148,3 +148,57 @@
 .leaderboard-tabs button {
     font-family: 'Lexend Deca', sans-serif;
 }
+.rating {
+    padding: 0.35rem 1rem;
+    border-radius: 999px;
+    font-weight: bold;
+    text-transform: capitalize;
+}
+
+
+.rating.deco {
+    background: #777;
+    color: white;
+}
+
+.rating.featured {
+    background: white;
+    color: black;
+}
+
+.rating.epic {
+    background: #ff5cc8;
+    color: white;
+}
+
+.rating.legendary {
+    background: #ffd700;
+    color: black;
+}
+
+.rating.mythical {
+    background: linear-gradient(
+        90deg,
+        red,
+        orange,
+        yellow,
+        green,
+        cyan,
+        blue,
+        violet
+    );
+    background-size: 300% 300%;
+    animation: mythicalRGB 3s infinite linear;
+    color: white;
+}
+
+
+@keyframes mythicalRGB {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    100% {
+        background-position: 300% 50%;
+    }
+}
