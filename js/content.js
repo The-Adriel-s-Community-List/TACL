@@ -1,6 +1,7 @@
 import { round, score } from './score.js';
 
 const creatorPointMap = {
+    unrated: 0,
     deco: 1,
     featured: 2,
     epic: 3,
@@ -141,12 +142,15 @@ export async function fetchCreatorLeaderboard() {
         if (err) return;
 
 // Se não tiver rating, vale 0 CP
-const points =
+const totalPoints =
     creatorPointMap[level.rating?.toLowerCase()] || 0;
 
 // Se não tiver criadores ou não valer pontos, ignora
-if (!level.creators || level.creators.length === 0 || points === 0)
+if (!level.creators || level.creators.length === 0)
     return;
+
+// Divide os pontos entre todos os criadores
+const points = totalPoints / level.creators.length;
 
         level.creators.forEach((creator) => {
             creatorMap[creator] ??= {
