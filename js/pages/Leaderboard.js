@@ -23,7 +23,7 @@ export default {
     <Spinner></Spinner>
 </main>
 
-<main v-else>
+<main v-else class="leaderboard-page">
 
 <div class="leaderboard-tabs">
     <button 
@@ -37,8 +37,10 @@ export default {
     @click="mode = 'creators'; selected = 0">
     Creators
 </button>
-       </div>
-            <div class="page-leaderboard">
+
+</div>
+
+<div class="page-leaderboard">
                 <div class="error-container">
                     <p class="error" v-if="err.length > 0">
                         Leaderboard may be incorrect, as the following levels could not be loaded: {{ err.join(', ') }}
