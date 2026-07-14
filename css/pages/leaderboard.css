@@ -149,12 +149,13 @@
     font-family: 'Lexend Deca', sans-serif;
 }
 .rating {
-    padding: 0.35rem 1rem;
+    padding: 4px 12px;
     border-radius: 999px;
+    font-size: 0.85rem;
     font-weight: bold;
+    display: inline-block;
     text-transform: capitalize;
 }
-
 
 .rating.deco {
     background: #777;
@@ -167,7 +168,7 @@
 }
 
 .rating.epic {
-    background: #ff5cc8;
+    background: #ff69b4;
     color: white;
 }
 
@@ -182,24 +183,23 @@
         red,
         orange,
         yellow,
-        green,
+        lime,
         cyan,
         blue,
-        violet
+        violet,
+        red
     );
-    background-size: 300% 300%;
-    animation: mythicalRGB 3s infinite linear;
+    background-size: 300%;
+    animation: mythicalRGB 4s linear infinite;
     color: white;
 }
 
-
 @keyframes mythicalRGB {
-    0% {
-        background-position: 0% 50%;
+    from {
+        background-position: 0%;
     }
-
-    100% {
-        background-position: 300% 50%;
+    to {
+        background-position: 300%;
     }
 }
 .cp-icon {
