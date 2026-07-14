@@ -139,3 +139,9 @@
 .leaderboard-tabs button:active {
     transform: scale(0.95);
 }
+.leaderboard-tabs button.active {
+    background: var(--color-on-primary);
+    color: var(--color-primary);
+
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
