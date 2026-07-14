@@ -127,7 +127,8 @@ export default {
         </h1>
 
         <h3>
-            {{ entry.total }} CP
+            {{ entry.total }}
+<img class="cp-icon" src="/assets/creator-point.png">
         </h3>
 
         <table class="table">
@@ -149,7 +150,8 @@ export default {
                 </td>
 
                 <td class="score">
-                    +{{ level.points }} CP
+                    +{{ level.points }}
+<img class="cp-icon" src="/assets/creator-point.png">
                 </td>
 
             </tr>
