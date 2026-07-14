@@ -1,5 +1,8 @@
 .page-leaderboard-container {
-    display: block;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
 }
 .page-leaderboard {
     height: 100%;
@@ -97,8 +100,9 @@
     align-items: center;
 
     width: 100%;
+    max-width: 80rem;
 
-    margin: 1rem 0 0.5rem;
+    margin: 1rem auto 0.5rem;
 
     gap: 0.5rem;
 }
@@ -143,8 +147,4 @@
 }
 .leaderboard-tabs button {
     font-family: 'Lexend Deca', sans-serif;
-}
-.page-leaderboard-container {
-    display: flex;
-    flex-direction: column;
 }
