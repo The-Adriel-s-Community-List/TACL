@@ -148,8 +148,6 @@ const totalPoints =
         if (!level.creators || level.creators.length === 0 || totalPoints === 0)
             return;
 
-        // Divide os pontos igualmente
-        const points = totalPoints / level.creators.length;
 
         level.creators.forEach((creator) => {
             creatorMap[creator] ??= {
