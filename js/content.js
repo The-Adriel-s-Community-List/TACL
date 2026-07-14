@@ -1,5 +1,13 @@
 import { round, score } from './score.js';
 
+const creatorPointMap = {
+    deco: 1,
+    featured: 2,
+    epic: 3,
+    legendary: 5,
+    mythical: 10,
+};
+
 /**
  * Path to directory containing `_list.json` and all levels
  */
@@ -56,6 +64,8 @@ export async function fetchLeaderboard() {
             errs.push(err);
             return;
         }
+
+        
 
         // Verification
         const verifier = Object.keys(scoreMap).find(
@@ -121,4 +131,50 @@ export async function fetchLeaderboard() {
 
     // Sort by total score
     return [res.sort((a, b) => b.total - a.total), errs];
+}
+export async function fetchCreatorLeaderboard() {
+    const list = await fetchList();
+
+    const creatorMap = {};
+
+    list.forEach(([level, err]) => {
+        if (err) return;
+
+        // Se não tiver rating, vale 0 CP
+const totalPoints =
+    creatorPointMap[level.rating?.toLowerCase()] || 0;
+
+        // Se não tiver criadores ou não valer pontos, ignora
+        if (!level.creators || level.creators.length === 0 || totalPoints === 0)
+            return;
+
+        // Divide os pontos igualmente
+        const points = totalPoints / level.creators.length;
+
+        level.creators.forEach((creator) => {
+            creatorMap[creator] ??= {
+                creator,
+                total: 0,
+                levels: [],
+            };
+
+            creatorMap[creator].total += points;
+
+            creatorMap[creator].levels.push({
+                level: level.name,
+                rating: level.rating,
+                points,
+                verification: level.verification,
+            });
+        });
+    });
+Object.values(creatorMap).forEach((creator) => {
+    creator.levels.sort((a, b) => b.points - a.points);
+});
+    return Object.values(creatorMap)
+        .map((creator) => ({
+            ...creator,
+            total: round(creator.total),
+        }))
+        .sort((a, b) => b.total - a.total);
 }
