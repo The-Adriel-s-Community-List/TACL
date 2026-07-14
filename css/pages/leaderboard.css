@@ -95,9 +95,11 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    
-    position: relative;
-    margin: 1.5rem auto 1rem;
+
+    width: 100%;
+
+    margin-top: 1rem;
+    margin-bottom: 1.5rem;
 
     gap: 0.5rem;
 }
