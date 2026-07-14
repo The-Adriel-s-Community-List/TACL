@@ -126,7 +126,7 @@ export default {
             {{ entry.creator }}
         </h1>
 
-        <h3>
+        <h3 class="type-label-lg">
             {{ entry.total }}
 <img class="cp-icon" src="/assets/creator-point.png">
         </h3>
@@ -147,14 +147,14 @@ export default {
 
                 <td>
     <span 
-        class="rating"
+        class="rating type-body"
         :class="level.rating"
     >
         {{ level.rating }}
     </span>
 </td>
 
-                <td class="score">
+                <td class="score creator-points type-body">
                     +{{ level.points }}
 <img class="cp-icon" src="/assets/creator-point.png">
                 </td>
