@@ -146,8 +146,13 @@ export default {
                 </td>
 
                 <td>
-                    {{ level.rating }}
-                </td>
+    <span 
+        class="rating"
+        :class="level.rating"
+    >
+        {{ level.rating }}
+    </span>
+</td>
 
                 <td class="score">
                     +{{ level.points }}
