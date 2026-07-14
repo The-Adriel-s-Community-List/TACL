@@ -13,6 +13,7 @@ const creatorPointMap = {
  * Path to directory containing `_list.json` and all levels
  */
 const defaultDir = '/data';
+const divideCreatorPoints = false;
 
 export async function fetchList(dir = defaultDir) {
     const listResult = await fetch(`${dir}/_list.json`);
