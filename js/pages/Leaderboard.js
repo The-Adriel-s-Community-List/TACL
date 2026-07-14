@@ -26,13 +26,17 @@ export default {
 <main v-else>
 
 <div class="leaderboard-tabs">
-    <button @click="mode = 'players'; selected = 0">
-        Players
-    </button>
+    <button 
+    :class="{ active: mode === 'players' }"
+    @click="mode = 'players'; selected = 0">
+    Players
+</button>
 
-    <button @click="mode = 'creators'; selected = 0">
-        Creators
-    </button>
+<button 
+    :class="{ active: mode === 'creators' }"
+    @click="mode = 'creators'; selected = 0">
+    Creators
+</button>
        </div>
             <div class="page-leaderboard">
                 <div class="error-container">
