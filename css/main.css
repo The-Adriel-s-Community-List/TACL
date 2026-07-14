@@ -94,3 +94,6 @@ input[type="checkbox"] {
     cursor: pointer;
     margin: 0;
 }
+main:has(.leaderboard-tabs) {
+    display: block;
+}
