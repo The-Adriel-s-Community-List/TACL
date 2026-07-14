@@ -7,5 +7,10 @@
     "verification": "https://youtu.be/Gui4wXj76wc",
     "percentToQualify": "100",
     "password": "Free to copy",
-    "records": [ ]
+    "records": [ {
+            "user": "SSolrac",
+            "link": "https://www.youtube.com/watch?v=aVbjtb18Ce4",
+            "percent": 100,
+            "hz": 120
+        } ]
 }
