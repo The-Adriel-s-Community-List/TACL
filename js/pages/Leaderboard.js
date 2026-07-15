@@ -54,7 +54,7 @@ export default {
     <template v-if="mode === 'creators'">
         <div class="cp-total">
             <span>{{ entry.total }}</span>
-            <img src="/images/creator-point.png" class="cp-icon">
+            <img src="/assets/creator-point.png" class="cp-icon">
         </div>
     </template>
 
