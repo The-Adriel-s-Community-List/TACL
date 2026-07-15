@@ -7,6 +7,11 @@
     "verification": "https://www.youtube.com/watch?v=IdIMxfXyTEk",
     "percentToQualify": "100",
     "password": "Free to Copy",
-    "records": [ ],
-    "rating": "featured"
+    "records": [{
+            "user": "SSolrac",
+            "link": "https://www.youtube.com/watch?v=42Mlk9FU0ow",
+            "percent": 100,
+            "hz": 120
+        } ],
+    "rating": "legendary"
 }
