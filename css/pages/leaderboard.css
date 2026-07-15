@@ -157,6 +157,11 @@
     text-transform: capitalize;
 }
 
+.rating.unrated {
+    background: #444;
+    color: #aaa;
+}
+
 .rating.deco {
     background: #777;
     color: white;
@@ -213,4 +218,18 @@
     align-items: center;
     justify-content: flex-end;
     gap: 5px;
+}
+.cp-total {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: .35rem;
+    white-space: nowrap;
+}
+
+.cp-icon {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+    flex-shrink: 0;
 }
