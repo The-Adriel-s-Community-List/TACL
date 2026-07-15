@@ -233,7 +233,3 @@
     object-fit: contain;
     flex-shrink: 0;
 }
-.page-leaderboard .board .cp {
-    width: 90px;
-    text-align: right;
-}
