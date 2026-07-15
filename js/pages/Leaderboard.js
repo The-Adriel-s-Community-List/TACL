@@ -129,15 +129,25 @@ export default {
     <!-- CREATOR LEADERBOARD -->
     <div class="player" v-else>
 
-        <h1>
-            #{{ selected + 1 }}
-            {{ entry.creator }}
-        </h1>
+        <div class="creator-header">
 
-        <h3 class="type-label-lg">
+    <h1>
+        #{{ selected + 1 }}
+        {{ entry.creator }}
+    </h1>
+
+    <div class="creator-cp">
+        <span class="type-label-lg">
             {{ entry.total }}
-<img class="cp-icon" src="/assets/creator-point.png">
-        </h3>
+        </span>
+
+        <img
+            class="cp-icon"
+            src="/assets/creator-point.png"
+        >
+    </div>
+
+</div>
 
         <table class="table">
 
