@@ -52,7 +52,7 @@ export default {
                             <td class="rank">
                                 <p class="type-label-lg">#{{ i + 1 }}</p>
                             </td>
-                            <td class="total">
+                            <td class="cp">
     <div class="cp-total">
         <span class="type-label-lg">{{ localize(ientry.total) }}</span>
 
