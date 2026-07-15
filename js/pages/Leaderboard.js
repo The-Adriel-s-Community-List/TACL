@@ -49,19 +49,19 @@ export default {
                 <div class="board-container">
                     <table class="board">
                         <tr v-for="(ientry, i) in currentLeaderboard">
-                            <td class="rank">
-                                <p class="type-label-lg">#{{ i + 1 }}</p>
-                            </td>
                             <td class="cp">
-    <div class="cp-total">
-        <span class="type-label-lg">{{ localize(ientry.total) }}</span>
 
-        <img
-            src="/images/creator-point.png"
-            alt="CP"
-            class="cp-icon"
-        >
-    </div>
+    <template v-if="mode === 'creators'">
+        <div class="cp-total">
+            <span>{{ entry.total }}</span>
+            <img src="/images/creator-point.png" class="cp-icon">
+        </div>
+    </template>
+
+    <template v-else>
+        <span class="type-label-lg">{{ localize(ientry.total) }}</span>
+    </template>
+
 </td>
                             <td class="user" :class="{ 'active': selected == i }">
                                 <button @click="selected = i">
