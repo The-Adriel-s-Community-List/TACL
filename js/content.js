@@ -150,6 +150,10 @@ if (!level.creators || level.creators.length === 0)
     return;
 
 
+    // Divide os pontos entre todos os criadores
+const points = totalPoints / level.creators.length;
+
+
 
         level.creators.forEach((creator) => {
             creatorMap[creator] ??= {
