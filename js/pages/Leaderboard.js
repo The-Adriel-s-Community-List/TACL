@@ -53,13 +53,13 @@ export default {
 
     <template v-if="mode === 'creators'">
         <div class="cp-total">
-            <span>{{ entry.total }}</span>
+            <span class="type-label-lg">{{ ientry.total }}</span>
             <img src="/assets/creator-point.png" class="cp-icon">
         </div>
     </template>
 
     <template v-else>
-        <span class="type-label-lg">{{ localize(ientry.total) }}</span>
+        <p class="type-label-lg">{{ localize(ientry.total) }}</p>
     </template>
 
 </td>
