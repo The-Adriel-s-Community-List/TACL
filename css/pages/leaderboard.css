@@ -237,3 +237,26 @@
     width: 90px;
     text-align: right;
 }
+.creator-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+}
+
+.creator-cp {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+
+    padding: .45rem .9rem;
+
+    border-radius: 999px;
+
+    background: var(--color-background-hover);
+}
+
+.creator-cp .cp-icon {
+    width: 20px;
+    height: 20px;
+}
