@@ -15,9 +15,15 @@
         },
     {
             "user": "Adrielbomdia",
-            "link": "https://www.youtube.com/watch?v=wkMgV_OaE-A",
+            "link": "https://youtu.be/LNeY90aw3ew",
             "percent": 100,
             "hz": 120
+        },
+        {
+            "user": "mamamia898",
+            "link": "https://www.youtube.com/watch?v=wkMgV_OaE-A",
+            "percent": 100,
+            "hz": 60
         }],
     "rating": "featured"
 }
