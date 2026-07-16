@@ -7,6 +7,11 @@
     "verification": "https://youtu.be/qCMHF1gvFnw?is=NXOtGehpZqAi2wOQ",
     "percentToQualify": "100",
     "password": "free to copy",
-    "records": [ ],
+    "records": [{
+            "user": "AdrielBomDia",
+            "link": "https://youtu.be/UUZSGhJnBRo?is=zDLtIVEpV0feVzru",
+            "percent": 100,
+            "hz": 120
+         ],
     "rating": "epic"
 }
