@@ -8,6 +8,11 @@
     "verification": "https://m.youtube.com/watch?v=BNZwfP-Av44",
     "percentToQualify": "100",
     "password": "free to copy",
-    "records": [ ],
+    "records": [{
+            "user": "MatPro",
+            "link": "https://www.youtube.com/watch?v=v2bvAyW8ms4",
+            "percent": 100,
+            "hz": 120
+        } ],
     "rating": "deco"
 }
