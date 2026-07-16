@@ -7,6 +7,11 @@
     "verification": "https://www.youtube.com/watch?v=Aer7iQJoLGI",
     "percentToQualify": "100",
     "password": "Free to Copy",
-    "records": [ ],
+    "records": [{
+            "user": "AdrielBomDia",
+            "link": "https://youtu.be/ElSakQQAaHQ?is=xkhCvMeoiTKnXLPV",
+            "percent": 100,
+            "hz": 120
+        }],
     "rating": "unrated"
 }
