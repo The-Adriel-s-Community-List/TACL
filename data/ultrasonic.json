@@ -7,10 +7,18 @@
     "verification": "https://www.youtube.com/watch?v=_zs_MlM8v9U",
     "percentToQualify": "100",
     "password": "46290",
-    "records": [{
+    "records": [
+        {
             "user": "AdrielBomDia",
-            "link": "https://www.youtube.com/watch?v=JP4KdPUldlk",
+            "link": "https://www.youtube.com/watch?v=MgJeijBGKHU",
             "percent": 100,
             "hz": 120
-        } ],
+        },
+        {
+            "user": "SSolrac",
+            "link": "https://youtu.be/rQKCqCmcoPA?si=qufjby_rEismr9dK",
+            "percent": 100,
+            "hz": 120
+        }
+],
 }
