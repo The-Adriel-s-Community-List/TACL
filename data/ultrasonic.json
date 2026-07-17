@@ -1,5 +1,5 @@
 {
-    "id": 142119655,
+    "id": "142119655",
     "name": "Ultra Sonic",
     "author": "meguitargd",
     "creators": ["meguitargd"],
@@ -20,5 +20,5 @@
             "percent": 100,
             "hz": 120
         }
-]
+    ]
 }
