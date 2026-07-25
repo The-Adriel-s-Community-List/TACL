@@ -3,16 +3,11 @@
     "name": "Geometrical Wavenato",
     "author": "meguitargd",
     "creators": ["meguitargd"],
-    "verifier": "meguitargd",
-    "verification": "https://youtu.be/4ww-H9k2e_o?is=mOBvZdK1uSzKjNKN",
+    "verifier": "adrielbomdia",
+    "verification": "https://youtu.be/7BzsrktKZEA?is=Z9dTOg43PhVNhBsg",
     "percentToQualify": "100",
     "password": "Free to Copy",
-    "records": [{
-            "user": "adrielbomdia",
-            "link": "https://youtu.be/7BzsrktKZEA?is=Z9dTOg43PhVNhBsg",
-            "percent": 100,
-            "hz": 120
-        },
+    "records": [
         {
             "user": "SSolrac",
             "link": "https://youtu.be/CK_v6O4G7_Q",
