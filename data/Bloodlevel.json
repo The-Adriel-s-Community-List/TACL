@@ -3,15 +3,11 @@
     "name": "Bloodlevel",
     "author": "sttey009",
     "creators": ["sttey009"],
-    "verifier": "meguitargd",
-    "verification": "https://youtu.be/qCMHF1gvFnw?is=NXOtGehpZqAi2wOQ",
+    "verifier": "AdrielBomDia",
+    "verification": "https://youtu.be/UUZSGhJnBRo?is=zDLtIVEpV0feVzru",
     "percentToQualify": "100",
     "password": "free to copy",
-    "records": [{
-            "user": "AdrielBomDia",
-            "link": "https://youtu.be/UUZSGhJnBRo?is=zDLtIVEpV0feVzru",
-            "percent": 100,
-            "hz": 120},
+    "records": [
     {
             "user": "SSolrac",
             "link": "https://youtu.be/pW-ebqBYEFs",
