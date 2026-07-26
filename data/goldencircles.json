@@ -3,16 +3,11 @@
     "name": "Golden Circles",
     "author": "meguitargd",
     "creators": ["COOLERSPANGYT"],
-    "verifier": "meguitargd",
-    "verification": "https://www.youtube.com/watch?v=f-6Yfd6PIZU",
+    "verifier": "SSolrac",
+    "verification": "https://youtu.be/IITtAk4aPZE",
     "percentToQualify": "100",
     "password": "Free to Copy",
-    "records": [{
-            "user": "SSolrac",
-            "link": "https://youtu.be/IITtAk4aPZE",
-            "percent": 100,
-            "hz": 120
-        },
+    "records": [
     {
             "user": "Adrielbomdia",
             "link": "https://youtu.be/LNeY90aw3ew",
