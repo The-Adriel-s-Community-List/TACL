@@ -3,16 +3,11 @@
     "name": "Pow3r",
     "author": "meguitargd",
     "creators": ["exitheo"],
-    "verifier": "meguitargd",
-    "verification": "https://youtu.be/OKQxaDo6T94?is=q9IMXGKF5pG5dqZu",
+    "verifier": "SSolrac",
+    "verification": "https://www.youtube.com/watch?v=1K3-78GV244",
     "percentToQualify": "100",
     "password": "Free to Copy",
-    "records": [{
-            "user": "SSolrac",
-            "link": "https://www.youtube.com/watch?v=1K3-78GV244",
-            "percent": 100,
-            "hz": 120
-        },
+    "records": [
     {
             "user": "adrielbomdia",
             "link": "https://youtu.be/F7jHutxrX48",
