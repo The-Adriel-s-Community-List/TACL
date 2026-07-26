@@ -3,16 +3,11 @@
     "name": "A4 Blood",
     "author": "meguitargd",
     "creators": ["meguitargd"],
-    "verifier": "meguitargd",
-    "verification": "https://www.youtube.com/watch?v=Aer7iQJoLGI",
+    "verifier": "AdrielBomDia",
+    "verification": "https://youtu.be/ElSakQQAaHQ?is=xkhCvMeoiTKnXLPV",
     "percentToQualify": "100",
     "password": "Free to Copy",
-    "records": [{
-            "user": "AdrielBomDia",
-            "link": "https://youtu.be/ElSakQQAaHQ?is=xkhCvMeoiTKnXLPV",
-            "percent": 100,
-            "hz": 120
-        },
+    "records": [
     {
             "user": "SSolrac",
             "link": "https://youtu.be/iW-uyFLPr-o",
