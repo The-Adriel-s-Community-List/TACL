@@ -3,16 +3,11 @@
     "name": "Kiling machine",
     "author": "meguitargd",
     "creators": ["meguitargd"],
-    "verifier": "meguitargd",
-    "verification": "https://youtu.be/uCEbAghpqrk?is=mXi0_syrqGX9yPH8",
+    "verifier": "AdrielBomDia",
+    "verification": "https://youtu.be/12WFE7n2Csc?is=XyvP1Hhz4Zqy6uH7",
     "percentToQualify": "100",
     "password": "Free to Copy",
-    "records": [ {
-            "user": "AdrielBomDia",
-            "link": "https://youtu.be/12WFE7n2Csc?is=XyvP1Hhz4Zqy6uH7",
-            "percent": 100,
-            "hz": 120
-        },
+    "records": [
         {
             "user": "SSolrac",
             "link": "https://youtu.be/ZwFl5iwl3kY",
