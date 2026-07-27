@@ -3,20 +3,20 @@
     "name": "Geometrical Wavenato",
     "author": "meguitargd",
     "creators": ["meguitargd"],
-    "verifier": "adrielbomdia",
-    "verification": "https://youtu.be/7BzsrktKZEA?is=Z9dTOg43PhVNhBsg",
+    "verifier": "Zbot7",
+    "verification": "https://www.youtube.com/watch?v=oTk_MfMwLbA",
     "percentToQualify": "100",
     "password": "Free to Copy",
     "records": [
         {
-            "user": "SSolrac",
-            "link": "https://youtu.be/CK_v6O4G7_Q",
+            "user": "adrielbomdia",
+            "link": "https://youtu.be/7BzsrktKZEA?is=Z9dTOg43PhVNhBsg",
             "percent": 100,
             "hz": 60
         },
         {
-            "user": "Zbot7",
-            "link": "https://www.youtube.com/watch?v=oTk_MfMwLbA",
+            "user": "SSolrac",
+            "link": "https://youtu.be/CK_v6O4G7_Q",
             "percent": 100,
             "hz": 60
         },
