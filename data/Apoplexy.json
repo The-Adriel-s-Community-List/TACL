@@ -7,6 +7,13 @@
     "verification": "https://youtu.be/yHd4FUnLUqA?is=ZhROM2VJ2fHK9etW",
     "percentToQualify": "100",
     "password": "free to copy",
-    "records": [ ],
+    "records": [
+                {
+            "user": "SSolrac",
+            "link": "https://youtu.be/KVIpZpLD6Fo",
+            "percent": 100,
+            "hz": 120
+        }
+    ],
     "rating": "epic"
 }
