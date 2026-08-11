@@ -1,5 +1,5 @@
 {
-    "id": 136529778,
+    "id": "136529778",
     "name": "Bloodlevel",
     "author": "sttey009",
     "creators": ["sttey009"],
@@ -11,14 +11,14 @@
     {
             "user": "SSolrac",
             "link": "https://youtu.be/pW-ebqBYEFs",
-            "percent": 100,
-            "hz": 120
+            "percent": "100",
+            "hz": "120"
     },
     {
             "user": "Stickmano",
             "link": "https://youtu.be/pcDkwdBzrFA",
-            "percent": 100,
-            "hz": 60,
+            "percent": "100",
+            "hz": "60",
     } ],
     "rating": "epic"
 }
