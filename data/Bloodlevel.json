@@ -7,11 +7,12 @@
     "verification": "https://youtu.be/UUZSGhJnBRo?is=zDLtIVEpV0feVzru",
     "percentToQualify": "100",
     "password": "free to copy",
-    "records": [{
+    "records": [
+        {
             "user": "SSolrac",
             "link": "https://youtu.be/pW-ebqBYEFs",
             "percent": 100,
-            "hz": 120,
+            "hz": 120
         },
         {
             "user": "Stickmano",
@@ -19,7 +20,8 @@
             "percent": 100,
             "hz": 60,
             "percent": "100",
-            "hz": "60",
-        }],
+            "hz": "60"
+        }
+    ],
     "rating": "epic"
 }
