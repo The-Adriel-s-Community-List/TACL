@@ -1,5 +1,5 @@
 {
-    "id": 141000232,
+    "id": "141000232",
     "name": "A4 Blood",
     "author": "meguitargd",
     "creators": ["meguitargd"],
@@ -12,6 +12,7 @@
             "user": "SSolrac",
             "link": "https://youtu.be/iW-uyFLPr-o",
             "percent": 100,
-            "hz": 120}],
+            "hz": 120
+    }],
     "rating": "unrated"
 }
