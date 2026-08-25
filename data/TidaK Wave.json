@@ -8,5 +8,13 @@
     "verification": "https://youtu.be/30s_i6aJaE4?si=mGOhYwriCOmgIkIu",
     "percentToQualify": "100",
     "password": "free to copy",
-    "records": [ ] 
+    "records": [
+         {
+            "user": "SSolrac",
+            "link": "https://youtu.be/sbh8czX96Ng",
+            "percent": 100,
+            "hz": 120
+        }
+    ],
+    "rating": "deco"
 }
