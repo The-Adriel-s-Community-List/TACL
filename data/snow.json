@@ -1,0 +1,40 @@
+{
+    "id": 124791028,
+    "name": "Snow",
+    "author": "mateusMK2",
+    "creators": ["mateusMK2"],
+    "verifier": "adrielbomdia",
+    "verification": "https://www.youtube.com/watch?v=ZaoAMGurK3U&",
+    "percentToQualify": "80",
+    "password": "Free to Copy",
+    "records": [ {
+            "user": "Mamamia898",
+            "link": "https://youtu.be/J_uFKeQGxh4",
+            "percent": 100,
+            "hz": 60
+        },
+     {
+            "user": "1arth",
+            "link": "https://www.youtube.com/watch?v=IMeEmNGRzeo",
+            "percent": 100,
+            "hz": 165
+        },
+     {
+            "user": "Nsm_gd",
+            "link": "https://www.youtube.com/watch?v=VCd0i8mENvU",
+            "percent": 100,
+            "hz": 240
+        },
+    {
+            "user": "SSolrac",
+            "link": "https://youtu.be/_xsdSdFJlE8",
+            "percent": 100,
+            "hz": 120
+        }],
+    "rating": "legendary",
+    "tags": ["wave", "ship", "flow"],
+    "comentario": "tags para dificuldade: wave, ship, ufo, robot, cube, flow, fast paced, timings, spam, 2-players, nerve control e chokepoints.",
+    "comentario2": "tags para rating: urated, deco, featured, epic, legendary, mythical",
+    "comentario3": "TODOS COM LETRA MINUSCULA, COM ASPAS E SEPARADOS POR VIRGULA."
+
+}

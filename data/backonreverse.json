@@ -1,0 +1,35 @@
+{
+    "id": 136054781,
+    "name": "Back on reverse",
+    "author": "meguitargd",
+    "creators": ["meguitargd"],
+    "verifier": "SSolrac",
+    "verification": "https://youtu.be/T7zo1sRbAZk",
+    "percentToQualify": "100",
+    "password": "Free to Copy",
+    "records": [
+        {
+            "user": "mamamia898",
+            "link": "https://youtu.be/aE4EKiuh9jI",
+            "percent": 100,
+            "hz": 60
+        },
+    {
+            "user": "AdrielBomDia",
+            "link": "https://youtu.be/w66MWJtz_wc?is=eSdstDHC73mezcT2",
+            "percent": 100,
+            "hz": 120
+        },
+            {
+            "user": "zbot7",
+            "link": "https://www.youtube.com/watch?v=qRED4qi5LX0",
+            "percent": 100,
+            "hz": 90
+        }],
+    "rating": "unrated",
+    "tags": ["cube", "timings", "chokepoints"],
+    "comentario": "tags para dificuldade: wave, ship, ufo, robot, cube, flow, fast paced, timings, spam, 2-players, nerve control e chokepoints.",
+    "comentario2": "tags para rating: urated, deco, featured, epic, legendary, mythical",
+    "comentario3": "TODOS COM LETRA MINUSCULA, COM ASPAS E SEPARADOS POR VIRGULA."
+
+}

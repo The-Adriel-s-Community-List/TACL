@@ -1,0 +1,41 @@
+{
+    "id": 141403369,
+    "name": "Impossible Game",
+    "author": "meguitargd",
+    "creators": ["meguitargd"],
+    "verifier": "adrielbomdia",
+    "verification": "https://youtu.be/yKzANsEassc?is=pa4ITuVAY6h5UMUh",
+    "percentToQualify": "100",
+    "password": "Free to Copy",
+    "records": [ 
+    {
+            "user": "1arth",
+            "link": "https://youtu.be/ywE0YfaleMQ",
+            "percent": 100,
+            "hz": 165
+        },
+    {
+            "user": "SSolrac",
+            "link": "https://www.youtube.com/watch?v=aVbjtb18Ce4",
+            "percent": 100,
+            "hz": 120
+        },
+    {
+            "user": "mamamia898",
+            "link": "https://youtu.be/8vpsd5EqZ_g",
+            "percent": 100,
+            "hz": 60
+        },
+    {
+            "user": "Zbot7",
+            "link": "https://www.youtube.com/watch?v=GdSFbZAr-eE",
+            "percent": 100,
+            "hz": 60
+        }],
+    "rating": "featured",
+    "tags": ["wave", "spam"],
+    "comentario": "tags para dificuldade: wave, ship, ufo, robot, cube, flow, fast paced, timings, spam, 2-players, nerve control e chokepoints.",
+    "comentario2": "tags para rating: urated, deco, featured, epic, legendary, mythical",
+    "comentario3": "TODOS COM LETRA MINUSCULA, COM ASPAS E SEPARADOS POR VIRGULA."
+
+}

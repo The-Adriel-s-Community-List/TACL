@@ -1,0 +1,29 @@
+  {
+    "id": "000000000",
+    "name": "baseplate",
+    "author": "sample",
+    "creators": ["sample"],
+    "verifier": "sample",
+    "verification": "https://www.youtube.com/watch?v=gO5od_0gm9E&pp=ugUHEgVwdC1CUg%3D%3D",
+    "percentToQualify": 100,
+    "password": "free to copy",
+    "records": [       
+        {
+            "user": "sample",
+            "link": "https://www.youtube.com/watch?v=BTtym6L9tZc",
+            "percent": 100,
+            "hz": 60
+        },
+        {
+            "user": "sample",
+            "link": "https://www.youtube.com/watch?v=OhutBBtkF7c",
+            "percent": 100,
+            "hz": 60
+        }],
+    "rating": "mythical",
+    "tags": [],
+    "comentario": "tags para dificuldade: wave, ship, ufo, robot, cube, flow, fast paced, timings, spam, 2-players, nerve control e chokepoints.",
+    "comentario2": "tags para rating: urated, deco, featured, epic, legendary, mythical",
+    "comentario3": "TODOS COM LETRA MINUSCULA, COM ASPAS E SEPARADOS POR VIRGULA."
+
+  }

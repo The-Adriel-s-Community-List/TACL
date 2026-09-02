@@ -1,0 +1,25 @@
+
+{
+    "id": "146748687",
+    "name": "TidaK Wave",
+    "author": "Zbot7",
+    "creators": ["zbot7"],
+    "verifier": "Zbot7",
+    "verification": "https://youtu.be/30s_i6aJaE4?si=mGOhYwriCOmgIkIu",
+    "percentToQualify": "100",
+    "password": "free to copy",
+    "records": [
+         {
+            "user": "SSolrac",
+            "link": "https://youtu.be/2BENus_aX1w",
+            "percent": 100,
+            "hz": 120
+        }
+    ],
+    "rating": "deco",
+    "tags": ["wave", "fast paced"],
+    "comentario": "tags para dificuldade: wave, ship, ufo, robot, cube, flow, fast paced, timings, spam, 2-players, nerve control e chokepoints.",
+    "comentario2": "tags para rating: urated, deco, featured, epic, legendary, mythical",
+    "comentario3": "TODOS COM LETRA MINUSCULA, COM ASPAS E SEPARADOS POR VIRGULA."
+
+}

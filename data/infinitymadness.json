@@ -1,0 +1,29 @@
+
+{
+    "id": 141814581,
+    "name": "Infinity Madness",
+    "author": "AdrielBomDia",
+    "creators": ["AdrielBomDia"],
+    "verifier": "AdrielBomDia",
+    "verification": "https://www.youtube.com/watch?v=IC1SiRxD0Qk",
+    "percentToQualify": "100",
+    "password": "free to copy",
+    "records": [{
+            "user": "Mamamia898",
+            "link": "https://www.youtube.com/watch?v=c1pIUUqVQ9g",
+            "percent": 100,
+            "hz": 60
+        },
+    {
+            "user": "SSolrac",
+            "link": "https://www.youtube.com/watch?v=qmWSDRnpIUU",
+            "percent": 100,
+            "hz": 120
+        }],
+    "rating": "unrated",
+    "tags": ["chokepoints", "nerve control"],
+    "comentario": "tags para dificuldade: wave, ship, ufo, robot, cube, flow, fast paced, timings, spam, 2-players, nerve control e chokepoints.",
+    "comentario2": "tags para rating: urated, deco, featured, epic, legendary, mythical",
+    "comentario3": "TODOS COM LETRA MINUSCULA, COM ASPAS E SEPARADOS POR VIRGULA."
+
+}

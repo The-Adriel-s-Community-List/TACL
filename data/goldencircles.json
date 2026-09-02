@@ -1,0 +1,29 @@
+{
+    "id": 144788489,
+    "name": "Golden Circles",
+    "author": "meguitargd",
+    "creators": ["COOLERSPANGYT"],
+    "verifier": "SSolrac",
+    "verification": "https://youtu.be/IITtAk4aPZE",
+    "percentToQualify": "100",
+    "password": "Free to Copy",
+    "records": [
+    {
+            "user": "Adrielbomdia",
+            "link": "https://youtu.be/LNeY90aw3ew",
+            "percent": 100,
+            "hz": 120
+        },
+        {
+            "user": "mamamia898",
+            "link": "https://www.youtube.com/watch?v=wkMgV_OaE-A",
+            "percent": 100,
+            "hz": 60
+        }],
+    "rating": "featured",
+    "tags": ["wave", "cube"],
+    "comentario": "tags para dificuldade: wave, ship, ufo, robot, cube, flow, fast paced, timings, spam, 2-players, nerve control e chokepoints.",
+    "comentario2": "tags para rating: urated, deco, featured, epic, legendary, mythical",
+    "comentario3": "TODOS COM LETRA MINUSCULA, COM ASPAS E SEPARADOS POR VIRGULA."
+
+}

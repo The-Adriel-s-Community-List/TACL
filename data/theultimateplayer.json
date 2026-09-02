@@ -1,0 +1,28 @@
+{
+    "id": 144014166,
+    "name": "The Ultimate Player",
+    "author": "AdrielBomDia",
+    "creators": ["AdrielBomDia"],
+    "verifier": "AdrielBomDia",
+    "verification": "https://www.youtube.com/watch?v=y3CqPmgMPJE&t=37s",
+    "percentToQualify": "100",
+    "password": "free to copy",
+    "records": [ {
+            "user": "Mamamia898",
+            "link": "https://youtu.be/xpMNeOsqrpI",
+            "percent": 100,
+            "hz": 60
+        },
+     {
+            "user": "SSolrac",
+            "link": "https://youtu.be/qmWSDRnpIUU",
+            "percent": 100,
+            "hz": 120
+        }],
+    "rating": "unrated",
+    "tags": ["timings", "2-players"],
+    "comentario": "tags para dificuldade: wave, ship, ufo, robot, cube, flow, fast paced, timings, spam, 2-players, nerve control e chokepoints.",
+    "comentario2": "tags para rating: urated, deco, featured, epic, legendary, mythical",
+    "comentario3": "TODOS COM LETRA MINUSCULA, COM ASPAS E SEPARADOS POR VIRGULA."
+
+}

@@ -1,0 +1,41 @@
+
+{
+    "id": 139848199,
+    "name": "Megamam adventures",
+    "author": "AdrielBomDia",
+    "creators": ["AdrielBomDia"],
+    "verifier": "AdrielBomDia",
+    "verification": "https://www.youtube.com/watch?v=vdqNg9LCFb0",
+    "percentToQualify": "100",
+    "password": "free to copy",
+    "records": [ {
+            "user": "Mamamia898",
+            "link": "https://www.youtube.com/watch?v=ZVyfHZO7cBw",
+            "percent": 100,
+            "hz": 60
+        },
+        {
+            "user": "1arth",
+            "link": "https://medal.tv/games/geometry-dash/clips/n03gQaXeBMNU0GjZe?invite=cr-MSxQdVYsNDY5NDA2ODk2",
+            "percent": 100,
+            "hz": 60
+        },
+        {
+            "user": "SSolrac",
+            "link": "https://youtu.be/_dOOxPhlgZs",
+            "percent": 100,
+            "hz": 60
+        },
+    {
+            "user": "izq397",
+            "link": "https://www.youtube.com/watch?v=JgCZrJuWpxg",
+            "percent": 100,
+            "hz": 60
+        }],
+    "rating": "featured",
+    "tags": ["cube", "ship", "timings"],
+    "comentario": "tags para dificuldade: wave, ship, ufo, robot, cube, flow, fast paced, timings, spam, 2-players, nerve control e chokepoints.",
+    "comentario2": "tags para rating: urated, deco, featured, epic, legendary, mythical",
+    "comentario3": "TODOS COM LETRA MINUSCULA, COM ASPAS E SEPARADOS POR VIRGULA."
+
+}

@@ -1,0 +1,46 @@
+{
+    "id": 143649918,
+    "name": "SpamXD",
+    "author": "1arth",
+    "creators": ["1arth"],
+    "verifier": "1arth",
+    "verification": "https://youtu.be/XL_Vn2AhyOs",
+    "percentToQualify": "100",
+    "password": "free to copy",
+    "records": [{
+            "user": "Mamamia898",
+            "link": "https://www.youtube.com/watch?v=VUtMbmBJ0KQ",
+            "percent": 100,
+            "hz": 60
+        }, 
+        {
+            "user": "AdrielBomDia",
+            "link": "https://www.youtube.com/watch?v=UqAaFEorZPw",
+            "percent": 100,
+            "hz": 120
+        },
+        {
+            "user": "Gustavxqzz",
+            "link": "https://youtu.be/o8RH_4z5hMI",
+            "percent": 100,
+            "hz": 60
+        },
+        {
+            "user": "SSolrac",
+            "link": "https://youtu.be/RZn5ocI9pOg",
+            "percent": 100,
+            "hz": 120
+        },        
+        {
+            "user": "MatPro",
+            "link": "https://www.youtube.com/watch?v=xlamg7kCZ4M",
+            "percent": 100,
+            "hz": 120
+        }],
+    "rating": "deco",
+    "tags": ["wave", "ship", "spam"],
+    "comentario": "tags para dificuldade: wave, ship, ufo, robot, cube, flow, fast paced, timings, spam, 2-players, nerve control e chokepoints.",
+    "comentario2": "tags para rating: urated, deco, featured, epic, legendary, mythical",
+    "comentario3": "TODOS COM LETRA MINUSCULA, COM ASPAS E SEPARADOS POR VIRGULA."
+
+}
