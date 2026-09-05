@@ -13,7 +13,13 @@
             "link": "https://www.youtube.com/watch?v=S7Wce5YH6uA",
             "percent": 100,
             "hz": 90
-        } ],
+        },
+    {
+            "user": "MatPro",
+            "link": "https://www.youtube.com/watch?v=wXjDWs6dOzU",
+            "percent": 100,
+            "hz": 240
+        }],
     "rating": "unrated",
     "tags": ["wave" ],
     "comentario": "tags para dificuldade: wave, ship, ufo, robot, cube, flow, fast paced, timings, spam, 2-players, nerve control e chokepoints.",
