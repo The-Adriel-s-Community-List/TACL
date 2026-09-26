@@ -37,6 +37,12 @@
         "link": "https://youtu.be/GUCYVnQQAcE",
         "percent": 100,
         "hz": 144
+    },
+    {
+            "user": "zbot7",
+            "link": "https://www.youtube.com/watch?v=WUjNdYOPhYo",
+            "percent": 100,
+            "hz": 90
         }],
     "rating": "featured",
     "tags": ["cube", "ship", "timings"],
