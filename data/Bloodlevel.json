@@ -20,12 +20,18 @@
             "percent": 100,
             "hz": 60
         },
-        {
+     {
             "user": "sophiz",
             "link": "https://youtu.be/SYsLg_Yssp0",
             "percent": "100",
             "hz": 144
-        }
+        },
+    {
+            "user": "zbot",
+            "link": "https://www.youtube.com/watch?v=WUjNdYOPhYo",
+            "percent": "100",
+            "hz": 90
+        },
     ],
     "rating": "epic",
     "tags": ["wave", "ship"],
