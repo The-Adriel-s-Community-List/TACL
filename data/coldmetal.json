@@ -7,7 +7,13 @@
     "verification": "https://youtu.be/g7yO3TTZnIA?si=kRDFCb57XiqrGoFn",
     "percentToQualify": "100",
     "password": "free to copy",
-    "records": [ ],
+    "records": [
+        {
+            "user": "Gustavxqzz",
+            "link": "https://medal.tv/games/geometry-dash/clips/nBySLAB7FZSNx-wXj?invite=cr-MSxocDYsNTczODUwODY3"
+            "percent": 100,
+            "hz": 120
+    ],
     "rating": "legendary",
     "tags": ["robot", "timings"],
     "comentario": "tags para dificuldade: wave, ship, ufo, robot, cube, flow, fast paced, timings, spam, 2-players, nerve control e chokepoints.",
