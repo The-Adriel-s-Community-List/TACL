@@ -944,5 +944,39 @@ table.records {
 .right-btn {
     right: 15px;
 }
+    
     display: none;
+}
+/* Posicionamento fixo e limpo para os botões de menu (☰) */
+.toggle-btn-left,
+.toggle-btn-right {
+    position: fixed;
+    top: 85px;
+    z-index: 1000;
+    background: rgba(40, 40, 40, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    transition: background 0.2s, transform 0.2s;
+}
+
+.toggle-btn-left:hover,
+.toggle-btn-right:hover {
+    background: rgba(60, 60, 60, 1);
+    transform: scale(1.05);
+}
+
+.toggle-btn-left {
+    left: 15px;
+}
+
+.toggle-btn-right {
+    right: 15px;
 }
