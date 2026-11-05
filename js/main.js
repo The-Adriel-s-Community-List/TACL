@@ -3,6 +3,7 @@ import { supabase } from './supabase.js';
 
 export const store = Vue.reactive({
     dark: JSON.parse(localStorage.getItem('dark')) || false,
+    isMod: false,
     toggleDark() {
         this.dark = !this.dark;
         localStorage.setItem('dark', JSON.stringify(this.dark));
@@ -15,8 +16,7 @@ const MOD_ROLE_ID = '1489765408205574325';
 const app = Vue.createApp({
     data: () => ({ 
         store,
-        user: null,
-        isMod: false
+        user: null
     }),
     computed: {
         username() {
@@ -27,23 +27,24 @@ const app = Vue.createApp({
         avatarUrl() {
             return this.user?.user_metadata?.avatar_url || 
                    'https://cdn.discordapp.com/embed/avatars/0.png';
+        },
+        isMod() {
+            return store.isMod;
         }
     },
     async mounted() {
-        // Carrega a sessão inicial do Supabase
         const { data: { session } } = await supabase.auth.getSession();
         this.user = session?.user || null;
         if (session) {
-            this.isMod = await this.checkIsMod(session);
+            store.isMod = await this.checkIsMod(session);
         }
 
-        // Escuta alterações na autenticação
         supabase.auth.onAuthStateChange(async (_event, session) => {
             this.user = session?.user || null;
             if (session) {
-                this.isMod = await this.checkIsMod(session);
+                store.isMod = await this.checkIsMod(session);
             } else {
-                this.isMod = false;
+                store.isMod = false;
                 sessionStorage.removeItem('is_mod');
             }
         });
@@ -53,7 +54,6 @@ const app = Vue.createApp({
             const providerToken = session?.provider_token;
             if (!providerToken) return false;
 
-            // Usa a memória local (cache) para evitar bloquear na API do Discord (Erro 429)
             const cachedMod = sessionStorage.getItem('is_mod');
             if (cachedMod !== null) return cachedMod === 'true';
 
@@ -64,15 +64,11 @@ const app = Vue.createApp({
                     }
                 });
 
-                if (!response.ok) {
-                    console.warn('Status do Discord:', response.status);
-                    return false;
-                }
+                if (!response.ok) return false;
 
                 const memberData = await response.json();
                 const isMod = memberData.roles && memberData.roles.includes(MOD_ROLE_ID);
                 
-                // Guarda o estado de moderador na sessão
                 sessionStorage.setItem('is_mod', isMod);
                 return isMod;
             } catch (err) {
@@ -93,7 +89,7 @@ const app = Vue.createApp({
         async logout() {
             await supabase.auth.signOut();
             this.user = null;
-            this.isMod = false;
+            store.isMod = false;
             sessionStorage.removeItem('is_mod');
         }
     }
