@@ -758,3 +758,44 @@ table.records {
 .btn-submit-record:hover {
     background: #2563eb;
 }
+
+/* Botões flutuantes de alternância de painéis */
+.toggle-sidebar-btn {
+    position: fixed;
+    top: 90px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #fff;
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    z-index: 100;
+    transition: background 0.2s, transform 0.2s;
+}
+
+.toggle-sidebar-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: scale(1.05);
+}
+
+.left-toggle {
+    left: 15px;
+}
+
+.right-toggle {
+    right: 15px;
+}
+
+/* Expande a área central do nível quando uma das colunas for recolhida */
+.page-list.collapse-left .list-container {
+    display: none;
+}
+
+.page-list.collapse-right .meta-container {
+    display: none;
+}
