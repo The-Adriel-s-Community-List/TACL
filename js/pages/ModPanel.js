@@ -2,8 +2,8 @@ import { supabase } from '../supabase.js';
 
 export default {
     template: `
-        <main class="page-mod" style="width: 100%; min-height: 80vh; padding: 40px 20px; box-sizing: border-box;">
-            <div style="max-width: 1200px; margin: 0 auto;">
+        <main class="page-mod" style="width: 100%; min-height: 85vh; padding: 40px; box-sizing: border-box;">
+            <div style="width: 100%; margin: 0 auto;">
                 <h1 style="font-size: 2.2rem; margin-bottom: 10px; font-weight: bold; color: #fff;">Painel de Moderação</h1>
                 <p style="color: #aaa; margin-bottom: 30px;">
                     Gerencie os recordes enviados pelos jogadores. Aceite para irem para a lista ou remova os inválidos.
