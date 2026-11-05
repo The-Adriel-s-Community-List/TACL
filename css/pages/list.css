@@ -153,6 +153,84 @@
 .tag-ufo            { background-color: #9b59b6; }
 .tag-flow           { background-color: #1abc9c; }
 .tag-robot          { background-color: #34495e; }
+
+/* Layout da Lista com suporte a minimização sem quebrar */
+.page-list.clean-layout {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: flex-start !important;
+    gap: 20px !important;
+    padding: 20px !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+}
+
+/* Colunas Laterais */
+.sidebar-col {
+    position: relative;
+    width: 320px;
+    flex-shrink: 0;
+    transition: width 0.3s ease, min-width 0.3s ease;
+}
+
+.sidebar-col.left-col {
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-col.right-col {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Quando minimizadas */
+.page-list.clean-layout.collapsed-left .left-col,
+.page-list.clean-layout.collapsed-right .right-col {
+    width: 45px !important;
+    min-width: 45px !important;
+    overflow: hidden;
+}
+
+/* Esconde 100% o conteúdo interno quando a barra estiver colapsada */
+.page-list.clean-layout.collapsed-left .left-col .sidebar-content,
+.page-list.clean-layout.collapsed-right .right-col .sidebar-content {
+    display: none !important;
+}
+
+/* Coluna Central do Level (sempre centralizada e responsiva) */
+.page-list.clean-layout .level-container {
+    flex: 1 !important;
+    max-width: 900px !important;
+    margin: 0 auto !important;
+    width: 100% !important;
+}
+
+/* Botões de Minimizar (☰) integrados no topo das colunas */
+.panel-toggle-btn {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #fff;
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    margin-bottom: 12px;
+    transition: background 0.2s, transform 0.2s;
+    flex-shrink: 0;
+}
+
+.panel-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.05);
+}
+
+.right-col .panel-toggle-btn {
+    align-self: flex-end;
+}
 .tag-spam           { background-color: #d35400; }
 .tag-2-players      { background-color: #16a085; }
 .tag-ship           { background-color: #e84393; }
