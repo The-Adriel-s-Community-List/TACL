@@ -23,11 +23,13 @@ export default {
         </main>
         <main v-else class="page-list custom-layout" :class="{ 'hide-left': leftCollapsed, 'hide-right': rightCollapsed }">
             
+            <!-- BOTÃO FLUTUANTE ESQUERDO -->
+            <button @click="leftCollapsed = !leftCollapsed" class="floating-toggle left-btn" :title="leftCollapsed ? 'Expandir Lista' : 'Minimizar Lista'">
+                ☰
+            </button>
+
             <!-- COLUNA ESQUERDA: LISTA DE NÍVEIS -->
             <div class="sidebar-wrapper left-sidebar">
-                <button @click="leftCollapsed = !leftCollapsed" class="sidebar-toggle-btn" :title="leftCollapsed ? 'Expandir Lista' : 'Minimizar Lista'">
-                    ☰
-                </button>
                 <div class="list-container">
                     <table class="list" v-if="list">
                         <tr v-for="([level, err], i) in list" :key="i">
@@ -127,11 +129,13 @@ export default {
                 </div>
             </div>
 
+            <!-- BOTÃO FLUTUANTE DIREITO -->
+            <button @click="rightCollapsed = !rightCollapsed" class="floating-toggle right-btn" :title="rightCollapsed ? 'Expandir Painel' : 'Minimizar Painel'">
+                ☰
+            </button>
+
             <!-- COLUNA DIREITA: EDITORES E INSTRUÇÕES -->
             <div class="sidebar-wrapper right-sidebar">
-                <button @click="rightCollapsed = !rightCollapsed" class="sidebar-toggle-btn" :title="rightCollapsed ? 'Expandir Painel' : 'Minimizar Painel'">
-                    ☰
-                </button>
                 <div class="meta-container">
                     <div class="meta">
                         <div class="errors" v-show="errors.length > 0">
@@ -174,7 +178,7 @@ export default {
         hoveredIndex: null,
         approvedSubmissions: {},
         leftCollapsed: false,
-        rightCollapsed: true // Já inicia minimizado conforme pedido
+        rightCollapsed: true // Já inicia minimizado
     }),
     computed: {
         level() {
