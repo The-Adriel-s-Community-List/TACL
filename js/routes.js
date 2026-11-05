@@ -10,6 +10,11 @@ const GUILD_ID = '1488342205386068089';
 const MOD_ROLE_ID = '1489765408205574325';
 
 async function checkDiscordModRole() {
+    // 1. Verifica se já está guardado no cache da sessão
+    const cachedMod = sessionStorage.getItem('is_mod');
+    if (cachedMod !== null) return cachedMod === 'true';
+
+    // 2. Se não estiver no cache, obtém a sessão ativa
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !session.provider_token) return false;
 
@@ -23,9 +28,12 @@ async function checkDiscordModRole() {
         if (!response.ok) return false;
 
         const memberData = await response.json();
-        return memberData.roles && memberData.roles.includes(MOD_ROLE_ID);
+        const isMod = memberData.roles && memberData.roles.includes(MOD_ROLE_ID);
+        
+        sessionStorage.setItem('is_mod', isMod);
+        return isMod;
     } catch (err) {
-        console.error('Erro ao verificar cargo no guard de rotas:', err);
+        console.error('Erro ao verificar cargo na rota:', err);
         return false;
     }
 }
@@ -44,7 +52,7 @@ export default [
             if (isMod) {
                 next();
             } else {
-                alert('Acesso negado: você precisa estar no servidor e possuir o cargo List Mod para acessar este painel.');
+                alert('Acesso negado: precisas de estar no servidor do Discord com o cargo List Mod para aceder a esta área.');
                 next('/');
             }
         }
