@@ -21,34 +21,34 @@ export default {
         <main v-if="loading">
             <Spinner></Spinner>
         </main>
-        <main v-else class="page-list" :class="{ 'collapse-left': leftCollapsed, 'collapse-right': rightCollapsed }">
+        <main v-else class="page-list custom-layout" :class="{ 'hide-left': leftCollapsed, 'hide-right': rightCollapsed }">
             
-            <!-- BOTÃO PARA MINIMIZAR/EXPANDIR A LISTA DE NÍVEIS (ESQUERDA) -->
-            <button @click="leftCollapsed = !leftCollapsed" class="toggle-sidebar-btn left-toggle" :title="leftCollapsed ? 'Expandir Lista' : 'Minimizar Lista'">
-                <span>☰</span>
-            </button>
-
             <!-- COLUNA ESQUERDA: LISTA DE NÍVEIS -->
-            <div class="list-container" v-show="!leftCollapsed">
-                <table class="list" v-if="list">
-                    <tr v-for="([level, err], i) in list" :key="i">
-                        <td class="rank">
-                            <p v-if="i + 1 <= 75" class="type-label-lg">#{{ i + 1 }}</p>
-                            <p v-else class="type-label-lg">Legacy</p>
-                        </td>
-                        <td class="level" :class="[{ 'active': selected == i, 'error': !level }, level?.rating ? \`rating-\${level.rating.toLowerCase()}\` : '']">
-                            <button @click="selected = i">
-                                <span class="type-label-lg level-name-text">{{ level?.name || \`Error (\${err}.json)\` }}</span>
-                                <span v-if="level?.rating" :class="['rating-badge', \`badge-\${level.rating.toLowerCase()}\`]">
-                                    {{ level.rating }}
-                                </span>
-                            </button>
-                        </td>
-                    </tr>
-                </table>
+            <div class="sidebar-wrapper left-sidebar">
+                <button @click="leftCollapsed = !leftCollapsed" class="sidebar-toggle-btn" :title="leftCollapsed ? 'Expandir Lista' : 'Minimizar Lista'">
+                    ☰
+                </button>
+                <div class="list-container">
+                    <table class="list" v-if="list">
+                        <tr v-for="([level, err], i) in list" :key="i">
+                            <td class="rank">
+                                <p v-if="i + 1 <= 75" class="type-label-lg">#{{ i + 1 }}</p>
+                                <p v-else class="type-label-lg">Legacy</p>
+                            </td>
+                            <td class="level" :class="[{ 'active': selected == i, 'error': !level }, level?.rating ? \`rating-\${level.rating.toLowerCase()}\` : '']">
+                                <button @click="selected = i">
+                                    <span class="type-label-lg level-name-text">{{ level?.name || \`Error (\${err}.json)\` }}</span>
+                                    <span v-if="level?.rating" :class="['rating-badge', \`badge-\${level.rating.toLowerCase()}\`]">
+                                        {{ level.rating }}
+                                    </span>
+                                </button>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
             </div>
 
-            <!-- COLUNA CENTRAL: DETALHES DO NÍVEL, VÍDEO E RECORDES -->
+            <!-- COLUNA CENTRAL: DETALHES DO NÍVEL E VÍDEO -->
             <div class="level-container">
                 <div class="level" v-if="level">
                     <div class="level-header">
@@ -90,7 +90,7 @@ export default {
                     <p v-else-if="selected + 1 <= 150"><strong>100%</strong> or better to qualify</p>
                     <p v-else>This level does not accept new records.</p>
                     
-                    <!-- CARDS DE RECORDES COM SUPORTE A LIXEIRA NO HOVER PARA MODS -->
+                    <!-- CARDS DE RECORDES COM LIXEIRA PARA MODS -->
                     <div class="records-container" v-if="level.records && level.records.length">
                         <div 
                             v-for="(record, index) in level.records" 
@@ -110,7 +110,6 @@ export default {
                                 <span class="record-hz">{{ record.hz }}Hz</span>
                             </div>
 
-                            <!-- Botão da lixeira no hover para moderadores -->
                             <button 
                                 v-if="store.isMod && hoveredIndex === index" 
                                 @click.stop="deleteRecord(record)"
@@ -128,39 +127,40 @@ export default {
                 </div>
             </div>
 
-            <!-- BOTÃO PARA MINIMIZAR/EXPANDIR OS EDITORES E INSTRUÇÕES (DIREITA) -->
-            <button @click="rightCollapsed = !rightCollapsed" class="toggle-sidebar-btn right-toggle" :title="rightCollapsed ? 'Expandir Painel' : 'Minimizar Painel'">
-                <span>☰</span>
-            </button>
-
-            <!-- COLUNA DIREITA: EDITORES E INSTRUÇÕES (JÁ INICIA MINIMIZADA) -->
-            <div class="meta-container" v-show="!rightCollapsed">
-                <div class="meta">
-                    <div class="errors" v-show="errors.length > 0">
-                        <p class="error" v-for="error of errors">{{ error }}</p>
+            <!-- COLUNA DIREITA: EDITORES E INSTRUÇÕES -->
+            <div class="sidebar-wrapper right-sidebar">
+                <button @click="rightCollapsed = !rightCollapsed" class="sidebar-toggle-btn" :title="rightCollapsed ? 'Expandir Painel' : 'Minimizar Painel'">
+                    ☰
+                </button>
+                <div class="meta-container">
+                    <div class="meta">
+                        <div class="errors" v-show="errors.length > 0">
+                            <p class="error" v-for="error of errors">{{ error }}</p>
+                        </div>
+                        <div class="og">
+                            <p class="type-label-md">Website layout made by <a href="https://tsl.pages.dev/" target="_blank">TheShittyList</a></p>
+                        </div>
+                        <template v-if="editors">
+                            <h3>List Editors</h3>
+                            <ol class="editors">
+                                <li v-for="editor in editors">
+                                    <img :src="\`/assets/\${roleIconMap[editor.role]}\${store.dark ? '-dark' : ''}.svg\`" :alt="editor.role">
+                                    <a v-if="editor.link" class="type-label-lg link" target="_blank" :href="editor.link">{{ editor.name }}</a>
+                                    <p v-else>{{ editor.name }}</p>
+                                </li>
+                            </ol>
+                        </template>
+                        <h3>Instruções de envio</h3>
+                        <p>Passar o level de forma legitima sem uso de nenhum hack como TPS bypass e Clickbot</p>
+                        <p>O vídeo precisa ter ou o áudio original do jogo ou os cliques/toques aparecendo. Só áudio editado não conta.</p>
+                        <p>A gravação precisa mostrar o attempt anterior e a animação completa da morte antes do completion — a não ser que a completion tenha sido de primeira tentativa.</p>
+                        <p>A gravação também precisa mostrar o jogador encostando no endwall — se não, o completion é invalidado.</p>
+                        <p>Não use bug routes ou secret routes (rotas que facilitariam a completion do level)</p>
+                        <p>Não use uma versão mais facil/nerfada — só vale record no level original, sem modificação.</p>
                     </div>
-                    <div class="og">
-                        <p class="type-label-md">Website layout made by <a href="https://tsl.pages.dev/" target="_blank">TheShittyList</a></p>
-                    </div>
-                    <template v-if="editors">
-                        <h3>List Editors</h3>
-                        <ol class="editors">
-                            <li v-for="editor in editors">
-                                <img :src="\`/assets/\${roleIconMap[editor.role]}\${store.dark ? '-dark' : ''}.svg\`" :alt="editor.role">
-                                <a v-if="editor.link" class="type-label-lg link" target="_blank" :href="editor.link">{{ editor.name }}</a>
-                                <p v-else>{{ editor.name }}</p>
-                            </li>
-                        </ol>
-                    </template>
-                    <h3>Instruções de envio</h3>
-                    <p>Passar o level de forma legitima sem uso de nenhum hack como TPS bypass e Clickbot</p>
-                    <p>O vídeo precisa ter ou o áudio original do jogo ou os cliques/toques aparecendo. Só áudio editado não conta.</p>
-                    <p>A gravação precisa mostrar o attempt anterior e a animação completa da morte antes do completion — a não ser que a completion tenha sido de primeira tentativa.</p>
-                    <p>A gravação também precisa mostrar o jogador encostando no endwall — se não, o completion é invalidado.</p>
-                    <p>Não use bug routes ou secret routes (rotas que facilitariam a completion do level)</p>
-                    <p>Não use uma versão mais facil/nerfada — só vale record no level original, sem modificação.</p>
                 </div>
             </div>
+
         </main>
     `,
     data: () => ({
@@ -174,7 +174,7 @@ export default {
         hoveredIndex: null,
         approvedSubmissions: {},
         leftCollapsed: false,
-        rightCollapsed: true // Já inicia minimizado conforme solicitado!
+        rightCollapsed: true // Já inicia minimizado conforme pedido
     }),
     computed: {
         level() {
