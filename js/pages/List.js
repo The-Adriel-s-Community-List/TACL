@@ -191,6 +191,7 @@ export default {
         store,
         showSubmitModal: false,
         submitting: false,
+        approvedSubmissions: {},
         form: {
             user_name: '',
             percent: 100,
@@ -201,7 +202,18 @@ export default {
     }),
     computed: {
         level() {
-            return this.list[this.selected][0];
+            const currentLevel = this.list[this.selected]?.[0];
+            if (!currentLevel) return null;
+
+            let mergedLevel = { ...currentLevel };
+            const approvedFromDb = this.approvedSubmissions[String(mergedLevel.id)] || [];
+            
+            mergedLevel.records = [
+                ...(mergedLevel.records || []),
+                ...approvedFromDb
+            ];
+
+            return mergedLevel;
         },
         video() {
             if (!this.level.showcase) {
@@ -216,9 +228,11 @@ export default {
         },
     },
     async mounted() {
-        // Hide loading spinner
         this.list = await fetchList();
         this.editors = await fetchEditors();
+        
+        // Busca os recordes aprovados do Supabase
+        await this.fetchApprovedSubmissions();
 
         // Error handling
         if (!this.list) {
@@ -243,6 +257,35 @@ export default {
     methods: {
         embed,
         score,
+        async fetchApprovedSubmissions() {
+            try {
+                const { data, error } = await supabase
+                    .from('submissions')
+                    .select('*')
+                    .eq('status', 'approved');
+
+                if (error) throw error;
+
+                let map = {};
+                if (data) {
+                    data.forEach(sub => {
+                        if (!map[sub.level_id]) {
+                            map[sub.level_id] = [];
+                        }
+                        map[sub.level_id].push({
+                            user: sub.user_name,
+                            percent: sub.percent,
+                            link: sub.video_link,
+                            hz: sub.hz,
+                            mobile: sub.mobile
+                        });
+                    });
+                }
+                this.approvedSubmissions = map;
+            } catch (err) {
+                console.error('Erro ao buscar recordes aprovados:', err.message);
+            }
+        },
         async submitRecord() {
             this.submitting = true;
             try {
