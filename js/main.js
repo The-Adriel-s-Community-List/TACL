@@ -30,20 +30,21 @@ const app = Vue.createApp({
         }
     },
     async mounted() {
-        // Carrega sessão inicial
+        // Carrega a sessão inicial do Supabase
         const { data: { session } } = await supabase.auth.getSession();
         this.user = session?.user || null;
         if (session) {
             this.isMod = await this.checkIsMod(session);
         }
 
-        // Escuta mudanças de autenticação
+        // Escuta alterações na autenticação
         supabase.auth.onAuthStateChange(async (_event, session) => {
             this.user = session?.user || null;
             if (session) {
                 this.isMod = await this.checkIsMod(session);
             } else {
                 this.isMod = false;
+                sessionStorage.removeItem('is_mod');
             }
         });
     },
@@ -52,6 +53,10 @@ const app = Vue.createApp({
             const providerToken = session?.provider_token;
             if (!providerToken) return false;
 
+            // Usa a memória local (cache) para evitar bloquear na API do Discord (Erro 429)
+            const cachedMod = sessionStorage.getItem('is_mod');
+            if (cachedMod !== null) return cachedMod === 'true';
+
             try {
                 const response = await fetch(`https://discord.com/api/v10/users/@me/guilds/${GUILD_ID}/member`, {
                     headers: {
@@ -59,10 +64,17 @@ const app = Vue.createApp({
                     }
                 });
 
-                if (!response.ok) return false;
+                if (!response.ok) {
+                    console.warn('Status do Discord:', response.status);
+                    return false;
+                }
 
                 const memberData = await response.json();
-                return memberData.roles && memberData.roles.includes(MOD_ROLE_ID);
+                const isMod = memberData.roles && memberData.roles.includes(MOD_ROLE_ID);
+                
+                // Guarda o estado de moderador na sessão
+                sessionStorage.setItem('is_mod', isMod);
+                return isMod;
             } catch (err) {
                 console.error('Erro ao verificar cargo do Discord:', err);
                 return false;
@@ -82,6 +94,7 @@ const app = Vue.createApp({
             await supabase.auth.signOut();
             this.user = null;
             this.isMod = false;
+            sessionStorage.removeItem('is_mod');
         }
     }
 });
