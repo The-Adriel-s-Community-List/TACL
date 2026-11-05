@@ -18,15 +18,15 @@ export default {
                 <input type="text" v-model="form.user_name" required placeholder="Ex: Mamamia898" style="background: #27272a; border: 1px solid #3f3f46; color: #fff; padding: 10px; border-radius: 6px;">
 
                 <label>Selecione o Nível:</label>
-                <select v-model="selectedLevelIndex" required style="background: #27272a; border: 1px solid #3f3f46; color: #fff; padding: 10px; border-radius: 6px;">
+                <select v-model="selectedLevelIndex" @change="onLevelChange" required style="background: #27272a; border: 1px solid #3f3f46; color: #fff; padding: 10px; border-radius: 6px;">
                     <option disabled value="">Escolha um nível...</option>
                     <option v-for="([level, _], index) in list" :key="index" :value="index">
-                        #{{ index + 1 }} - {{ level.name }}
+                        #{{ index + 1 }} - {{ level.name }} (Mín: {{ level.percentToQualify }}%)
                     </option>
                 </select>
 
-                <label>Porcentagem (%):</label>
-                <input type="number" v-model="form.percent" min="1" max="100" required placeholder="100" style="background: #27272a; border: 1px solid #3f3f46; color: #fff; padding: 10px; border-radius: 6px;">
+                <label>Porcentagem (%): <span v-if="currentMinPercent > 0" style="font-size: 0.85rem; color: #38bdf8;">(Mínimo exigido: {{ currentMinPercent }}%)</span></label>
+                <input type="number" v-model="form.percent" :min="currentMinPercent" max="100" required placeholder="100" style="background: #27272a; border: 1px solid #3f3f46; color: #fff; padding: 10px; border-radius: 6px;">
 
                 <label>Link do Vídeo (YouTube):</label>
                 <input type="url" v-model="form.video_link" required placeholder="https://youtube.com/watch?v=..." style="background: #27272a; border: 1px solid #3f3f46; color: #fff; padding: 10px; border-radius: 6px;">
@@ -49,6 +49,7 @@ export default {
         loading: true,
         submitting: false,
         selectedLevelIndex: '',
+        currentMinPercent: 100,
         form: {
             user_name: '',
             percent: 100,
@@ -62,6 +63,17 @@ export default {
         this.loading = false;
     },
     methods: {
+        onLevelChange() {
+            if (this.selectedLevelIndex !== '') {
+                const levelData = this.list[this.selectedLevelIndex][0];
+                // Pega a porcentagem mínima do nível (geralmente percentToQualify, ex: 80)
+                this.currentMinPercent = levelData.percentToQualify || 100;
+                // Se a porcentagem atual for menor que o mínimo, ajusta automaticamente para facilitar
+                if (this.form.percent < this.currentMinPercent) {
+                    this.form.percent = this.currentMinPercent;
+                }
+            }
+        },
         async submitRecord() {
             if (this.selectedLevelIndex === '') {
                 alert('Por favor, selecione um nível.');
@@ -69,6 +81,13 @@ export default {
             }
 
             const levelData = this.list[this.selectedLevelIndex][0];
+            const minPercent = levelData.percentToQualify || 100;
+
+            // Validação dupla por segurança (caso tentem burlar o HTML)
+            if (Number(this.form.percent) < minPercent) {
+                alert(`A porcentagem mínima para este nível (${levelData.name}) é de ${minPercent}%.`);
+                return;
+            }
 
             this.submitting = true;
             try {
@@ -92,6 +111,7 @@ export default {
                 alert('Recorde enviado com sucesso! Aguarde a avaliação dos moderadores.');
                 this.form = { user_name: '', percent: 100, video_link: '', hz: 60, mobile: false };
                 this.selectedLevelIndex = '';
+                this.currentMinPercent = 100;
             } catch (err) {
                 alert('Erro ao enviar recorde: ' + err.message);
             } finally {
