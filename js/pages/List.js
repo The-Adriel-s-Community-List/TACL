@@ -35,10 +35,10 @@ export default {
                                 <p v-if="i + 1 <= 75" class="type-label-lg">#{{ i + 1 }}</p>
                                 <p v-else class="type-label-lg">Legacy</p>
                             </td>
-                            <td class="level" :class="[{ 'active': selected == i, 'error': !level }, level?.rating ? \`rating-\${level.rating.toLowerCase()}\` : '']">
+                            <td class="level" :class="[{ 'active': selected == i, 'error': !level }, level?.rating ? 'rating-' + level.rating.toLowerCase() : '']">
                                 <button @click="selected = i">
-                                    <span class="type-label-lg level-name-text">{{ level?.name || \`Error (\${err}.json)\` }}</span>
-                                    <span v-if="level?.rating" :class="['rating-badge', \`badge-\${level.rating.toLowerCase()}\`]">
+                                    <span class="type-label-lg level-name-text">{{ level?.name || 'Error (' + err + '.json)' }}</span>
+                                    <span v-if="level?.rating" :class="['rating-badge', 'badge-' + level.rating.toLowerCase()]">
                                         {{ level.rating }}
                                     </span>
                                 </button>
@@ -53,8 +53,8 @@ export default {
                 <div class="level" v-if="level">
                     <div class="level-header">
                         <div class="title-rating-wrapper">
-                            <h1 :class="level.rating ? \`title-\${level.rating.toLowerCase()}\` : ''">{{ level.name }}</h1>
-                            <span v-if="level.rating" :class="['main-rating-tag', \`tag-rating-\${level.rating.toLowerCase()}\`]">
+                            <h1 :class="level.rating ? 'title-' + level.rating.toLowerCase() : ''">{{ level.name }}</h1>
+                            <span v-if="level.rating" :class="['main-rating-tag', 'tag-rating-' + level.rating.toLowerCase()]">
                                 {{ level.rating }}
                             </span>
                         </div>
@@ -62,7 +62,7 @@ export default {
                             <span 
                                 v-for="(tag, index) in level.tags" 
                                 :key="index" 
-                                :class="['level-tag', \`tag-\${tag.toLowerCase().replace(/\\s+/g, '-')}\`]"
+                                :class="['level-tag', 'tag-' + tag.toLowerCase().replace(/\\s+/g, '-')]"
                             >
                                 {{ tag }}
                             </span>
@@ -106,7 +106,7 @@ export default {
                                 <span v-if="index === 0" class="first-victor-tag">FIRST VICTOR</span>
                             </div>
                             <div class="record-right">
-                                <img v-if="record.mobile" :src="\`/assets/phone-landscape\${store.dark ? '-dark' : ''}.svg\`" alt="Mobile" class="record-mobile">
+                                <img v-if="record.mobile" :src="'/assets/phone-landscape' + (store.dark ? '-dark' : '') + '.svg'" alt="Mobile" class="record-mobile">
                                 <span class="record-hz">{{ record.hz }}Hz</span>
                             </div>
 
@@ -144,7 +144,7 @@ export default {
                             <h3>List Editors</h3>
                             <ol class="editors">
                                 <li v-for="editor in editors">
-                                    <img :src="\`/assets/\${roleIconMap[editor.role]}\${store.dark ? '-dark' : ''}.svg\`" :alt="editor.role">
+                                    <img :src="'/assets/' + roleIconMap[editor.role] + (store.dark ? '-dark' : '') + '.svg'" :alt="editor.role">
                                     <a v-if="editor.link" class="type-label-lg link" target="_blank" :href="editor.link">{{ editor.name }}</a>
                                     <p v-else>{{ editor.name }}</p>
                                 </li>
@@ -174,7 +174,7 @@ export default {
         hoveredIndex: null,
         approvedSubmissions: {},
         leftCollapsed: false,
-        rightCollapsed: true // Já vem minimizado por padrão!
+        rightCollapsed: true
     }),
     computed: {
         level() {
@@ -218,4 +218,74 @@ export default {
                 ...this.list
                     .filter(([_, err]) => err)
                     .map(([_, err]) => {
-                        return `Failed to load
+                        return `Failed to load level. (${err}.json)`;
+                    })
+            );
+            if (!this.editors) {
+                this.errors.push("Failed to load list editors.");
+            }
+        }
+
+        this.loading = false;
+    },
+    methods: {
+        embed,
+        score,
+        async fetchApprovedSubmissions() {
+            try {
+                const { data, error } = await supabase
+                    .from('submissions')
+                    .select('*')
+                    .eq('status', 'approved');
+
+                if (error) throw error;
+
+                let map = {};
+                if (data) {
+                    data.forEach(sub => {
+                        if (!map[sub.level_id]) {
+                            map[sub.level_id] = [];
+                        }
+                        map[sub.level_id].push({
+                            id: sub.id,
+                            user: sub.user_name,
+                            percent: sub.percent,
+                            link: sub.video_link,
+                            hz: sub.hz,
+                            mobile: sub.mobile
+                        });
+                    });
+                }
+                this.approvedSubmissions = map;
+            } catch (err) {
+                console.error('Erro ao buscar recordes aprovados:', err.message);
+            }
+        },
+        async deleteRecord(record) {
+            if (!record.id) {
+                alert('Este recorde faz parte do arquivo estático e não pode ser apagado por aqui.');
+                return;
+            }
+
+            if (!confirm(`Tem certeza de que deseja apagar o recorde de ${record.user} (${record.percent}%)?`)) return;
+
+            try {
+                const { error } = await supabase
+                    .from('submissions')
+                    .delete()
+                    .eq('id', record.id);
+
+                if (error) throw error;
+
+                const levelIdStr = String(this.level.id);
+                if (this.approvedSubmissions[levelIdStr]) {
+                    this.approvedSubmissions[levelIdStr] = this.approvedSubmissions[levelIdStr].filter(r => r.id !== record.id);
+                }
+
+                alert('Recorde apagado com sucesso!');
+            } catch (err) {
+                alert('Erro ao apagar recorde: ' + err.message);
+            }
+        }
+    },
+};
