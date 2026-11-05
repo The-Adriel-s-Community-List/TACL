@@ -6,7 +6,7 @@ export default {
                 Painel exclusivo para moderadores verificados via Discord.
             </p>
             <div style="background: rgba(255,255,255,0.03); padding: 20px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
-                <p>Podes gerir e apagar os recordes diretamente ao passar o rato por cima deles na página principal da **List**.</p>
+                <p>Você pode gerenciar e apagar os recordes diretamente ao passar o mouse por cima deles na página principal da **List**.</p>
             </div>
         </main>
     `,
