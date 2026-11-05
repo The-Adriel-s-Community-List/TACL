@@ -21,32 +21,32 @@ export default {
         <main v-if="loading">
             <Spinner></Spinner>
         </main>
-        <main v-else class="page-list" :style="gridStyle">
+        <main v-else class="page-list clean-layout" :class="{ 'collapsed-left': leftCollapsed, 'collapsed-right': rightCollapsed }">
             
             <!-- COLUNA ESQUERDA: LISTA DE NÍVEIS -->
-            <div class="list-container" v-show="!leftCollapsed">
-                <table class="list" v-if="list">
-                    <tr v-for="([level, err], i) in list" :key="i">
-                        <td class="rank">
-                            <p v-if="i + 1 <= 75" class="type-label-lg">#{{ i + 1 }}</p>
-                            <p v-else class="type-label-lg">Legacy</p>
-                        </td>
-                        <td class="level" :class="[{ 'active': selected == i, 'error': !level }, level?.rating ? \`rating-\${level.rating.toLowerCase()}\` : '']">
-                            <button @click="selected = i">
-                                <span class="type-label-lg level-name-text">{{ level?.name || \`Error (\${err}.json)\` }}</span>
-                                <span v-if="level?.rating" :class="['rating-badge', \`badge-\${level.rating.toLowerCase()}\`]">
-                                    {{ level.rating }}
-                                </span>
-                            </button>
-                        </td>
-                    </tr>
-                </table>
+            <div class="sidebar-col left-col">
+                <button @click="leftCollapsed = !leftCollapsed" class="panel-toggle-btn" :title="leftCollapsed ? 'Expandir Lista' : 'Minimizar Lista'">
+                    ☰
+                </button>
+                <div class="sidebar-content" v-show="!leftCollapsed">
+                    <table class="list" v-if="list">
+                        <tr v-for="([level, err], i) in list" :key="i">
+                            <td class="rank">
+                                <p v-if="i + 1 <= 75" class="type-label-lg">#{{ i + 1 }}</p>
+                                <p v-else class="type-label-lg">Legacy</p>
+                            </td>
+                            <td class="level" :class="[{ 'active': selected == i, 'error': !level }, level?.rating ? \`rating-\${level.rating.toLowerCase()}\` : '']">
+                                <button @click="selected = i">
+                                    <span class="type-label-lg level-name-text">{{ level?.name || \`Error (\${err}.json)\` }}</span>
+                                    <span v-if="level?.rating" :class="['rating-badge', \`badge-\${level.rating.toLowerCase()}\`]">
+                                        {{ level.rating }}
+                                    </span>
+                                </button>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
             </div>
-
-            <!-- BOTÃO DE MINIMIZAR ESQUERDO -->
-            <button @click="leftCollapsed = !leftCollapsed" class="toggle-btn-left" :title="leftCollapsed ? 'Expandir Lista' : 'Minimizar Lista'">
-                ☰
-            </button>
 
             <!-- COLUNA CENTRAL: DETALHES DO NÍVEL E VÍDEO -->
             <div class="level-container">
@@ -127,37 +127,37 @@ export default {
                 </div>
             </div>
 
-            <!-- BOTÃO DE MINIMIZAR DIREITO -->
-            <button @click="rightCollapsed = !rightCollapsed" class="toggle-btn-right" :title="rightCollapsed ? 'Expandir Painel' : 'Minimizar Painel'">
-                ☰
-            </button>
-
-            <!-- COLUNA DIREITA: EDITORES E INSTRUÇÕES (JÁ INICIA MINIMIZADA) -->
-            <div class="meta-container" v-show="!rightCollapsed">
-                <div class="meta">
-                    <div class="errors" v-show="errors.length > 0">
-                        <p class="error" v-for="error of errors">{{ error }}</p>
+            <!-- COLUNA DIREITA: EDITORES E INSTRUÇÕES -->
+            <div class="sidebar-col right-col">
+                <button @click="rightCollapsed = !rightCollapsed" class="panel-toggle-btn" :title="rightCollapsed ? 'Expandir Painel' : 'Minimizar Painel'">
+                    ☰
+                </button>
+                <div class="sidebar-content" v-show="!rightCollapsed">
+                    <div class="meta">
+                        <div class="errors" v-show="errors.length > 0">
+                            <p class="error" v-for="error of errors">{{ error }}</p>
+                        </div>
+                        <div class="og">
+                            <p class="type-label-md">Website layout made by <a href="https://tsl.pages.dev/" target="_blank">TheShittyList</a></p>
+                        </div>
+                        <template v-if="editors">
+                            <h3>List Editors</h3>
+                            <ol class="editors">
+                                <li v-for="editor in editors">
+                                    <img :src="\`/assets/\${roleIconMap[editor.role]}\${store.dark ? '-dark' : ''}.svg\`" :alt="editor.role">
+                                    <a v-if="editor.link" class="type-label-lg link" target="_blank" :href="editor.link">{{ editor.name }}</a>
+                                    <p v-else>{{ editor.name }}</p>
+                                </li>
+                            </ol>
+                        </template>
+                        <h3>Instruções de envio</h3>
+                        <p>Passar o level de forma legitima sem uso de nenhum hack como TPS bypass e Clickbot</p>
+                        <p>O vídeo precisa ter ou o áudio original do jogo ou os cliques/toques aparecendo. Só áudio editado não conta.</p>
+                        <p>A gravação precisa mostrar o attempt anterior e a animação completa da morte antes do completion — a não ser que a completion tenha sido de primeira tentativa.</p>
+                        <p>A gravação também precisa mostrar o jogador encostando no endwall — se não, o completion é invalidado.</p>
+                        <p>Não use bug routes ou secret routes (rotas que facilitariam a completion do level)</p>
+                        <p>Não use uma versão mais facil/nerfada — só vale record no level original, sem modificação.</p>
                     </div>
-                    <div class="og">
-                        <p class="type-label-md">Website layout made by <a href="https://tsl.pages.dev/" target="_blank">TheShittyList</a></p>
-                    </div>
-                    <template v-if="editors">
-                        <h3>List Editors</h3>
-                        <ol class="editors">
-                            <li v-for="editor in editors">
-                                <img :src="\`/assets/\${roleIconMap[editor.role]}\${store.dark ? '-dark' : ''}.svg\`" :alt="editor.role">
-                                <a v-if="editor.link" class="type-label-lg link" target="_blank" :href="editor.link">{{ editor.name }}</a>
-                                <p v-else>{{ editor.name }}</p>
-                            </li>
-                        </ol>
-                    </template>
-                    <h3>Instruções de envio</h3>
-                    <p>Passar o level de forma legitima sem uso de nenhum hack como TPS bypass e Clickbot</p>
-                    <p>O vídeo precisa ter ou o áudio original do jogo ou os cliques/toques aparecendo. Só áudio editado não conta.</p>
-                    <p>A gravação precisa mostrar o attempt anterior e a animação completa da morte antes do completion — a não ser que a completion tenha sido de primeira tentativa.</p>
-                    <p>A gravação também precisa mostrar o jogador encostando no endwall — se não, o completion é invalidado.</p>
-                    <p>Não use bug routes ou secret routes (rotas que facilitariam a completion do level)</p>
-                    <p>Não use uma versão mais facil/nerfada — só vale record no level original, sem modificação.</p>
                 </div>
             </div>
 
@@ -174,18 +174,9 @@ export default {
         hoveredIndex: null,
         approvedSubmissions: {},
         leftCollapsed: false,
-        rightCollapsed: true // Já inicia minimizado conforme pedido
+        rightCollapsed: true // Já vem minimizado por padrão!
     }),
     computed: {
-        gridStyle() {
-            let leftCol = this.leftCollapsed ? '60px' : 'var(--list-width, 350px)';
-            let rightCol = this.rightCollapsed ? '60px' : 'var(--meta-width, 350px)';
-            return {
-                display: 'grid',
-                gridTemplateColumns: `${leftCol} 1fr ${rightCol}`,
-                transition: 'grid-template-columns 0.3s ease'
-            };
-        },
         level() {
             const currentLevel = this.list[this.selected]?.[0];
             if (!currentLevel) return null;
@@ -227,74 +218,4 @@ export default {
                 ...this.list
                     .filter(([_, err]) => err)
                     .map(([_, err]) => {
-                        return `Failed to load level. (${err}.json)`;
-                    })
-            );
-            if (!this.editors) {
-                this.errors.push("Failed to load list editors.");
-            }
-        }
-
-        this.loading = false;
-    },
-    methods: {
-        embed,
-        score,
-        async fetchApprovedSubmissions() {
-            try {
-                const { data, error } = await supabase
-                    .from('submissions')
-                    .select('*')
-                    .eq('status', 'approved');
-
-                if (error) throw error;
-
-                let map = {};
-                if (data) {
-                    data.forEach(sub => {
-                        if (!map[sub.level_id]) {
-                            map[sub.level_id] = [];
-                        }
-                        map[sub.level_id].push({
-                            id: sub.id,
-                            user: sub.user_name,
-                            percent: sub.percent,
-                            link: sub.video_link,
-                            hz: sub.hz,
-                            mobile: sub.mobile
-                        });
-                    });
-                }
-                this.approvedSubmissions = map;
-            } catch (err) {
-                console.error('Erro ao buscar recordes aprovados:', err.message);
-            }
-        },
-        async deleteRecord(record) {
-            if (!record.id) {
-                alert('Este recorde faz parte do arquivo estático e não pode ser apagado por aqui.');
-                return;
-            }
-
-            if (!confirm(`Tem certeza de que deseja apagar o recorde de ${record.user} (${record.percent}%)?`)) return;
-
-            try {
-                const { error } = await supabase
-                    .from('submissions')
-                    .delete()
-                    .eq('id', record.id);
-
-                if (error) throw error;
-
-                const levelIdStr = String(this.level.id);
-                if (this.approvedSubmissions[levelIdStr]) {
-                    this.approvedSubmissions[levelIdStr] = this.approvedSubmissions[levelIdStr].filter(r => r.id !== record.id);
-                }
-
-                alert('Recorde apagado com sucesso!');
-            } catch (err) {
-                alert('Erro ao apagar recorde: ' + err.message);
-            }
-        }
-    },
-};
+                        return `Failed to load
