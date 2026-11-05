@@ -1,81 +1,86 @@
-import { supabase } from "../supabase.js";
-import Spinner from "../components/Spinner.js";
+import { supabase } from '../supabase.js';
 
 export default {
-    components: { Spinner },
     template: `
         <main class="page-mod">
-            <div class="mod-container">
-                <h2>Painel de Moderação - Recordes Pendentes</h2>
-                
-                <div v-if="loading" style="display: flex; justify-content: center; padding: 40px;">
-                    <Spinner></Spinner>
+            <div class="table-container" style="max-width: 900px; margin: 40px auto; padding: 20px;">
+                <h1 style="font-size: 2rem; margin-bottom: 20px; font-weight: bold;">Painel de Moderação</h1>
+                <p style="color: #aaa; margin-bottom: 30px;">Gerencie e remova recordes inválidos ou hackeados passando o cursor sobre eles.</p>
+
+                <div v-if="loading" style="text-align: center; padding: 40px;">
+                    <p>A carregar recordes...</p>
                 </div>
 
-                <div v-else-if="submissions.length === 0" class="no-submissions">
-                    <p>Não há recordes pendentes para analisar no momento! 🎉</p>
+                <div v-else-if="records.length === 0" style="text-align: center; padding: 40px; background: rgba(255,255,255,0.03); border-radius: 8px;">
+                    <p>Nenhum recorde encontrado.</p>
                 </div>
 
-                <div v-else class="submissions-grid">
-                    <div v-for="sub in submissions" :key="sub.id" class="submission-card">
-                        <div class="sub-header">
-                            <span class="sub-level">{{ sub.level_name }}</span>
-                            <span class="sub-percent">{{ sub.percent }}%</span>
+                <div v-else style="display: flex; flex-direction: column; gap: 10px;">
+                    <!-- Cada item da lista com efeito hover para mostrar a lixeira -->
+                    <div 
+                        v-for="record in records" 
+                        :key="record.id" 
+                        class="record-item"
+                        style="position: relative; display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: rgba(255, 255, 255, 0.05); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1); transition: background 0.2s;"
+                    >
+                        <div>
+                            <strong style="font-size: 1.1rem; color: #fff;">{{ record.player }}</strong> 
+                            <span style="color: #ccc; margin-left: 8px;">completou</span> 
+                            <span style="color: #5865F2; font-weight: bold;">{{ record.level }}</span> 
+                            <span style="background: rgba(88, 101, 242, 0.2); padding: 2px 6px; border-radius: 4px; font-size: 0.85rem; margin-left: 10px;">{{ record.percent }}%</span>
                         </div>
-                        <div class="sub-body">
-                            <p><strong>Jogador:</strong> {{ sub.user_name }}</p>
-                            <p><strong>Hz:</strong> {{ sub.hz }}Hz {{ sub.mobile ? '(Mobile)' : '(PC)' }}</p>
-                            <p><strong>Vídeo:</strong> <a :href="sub.video_link" target="_blank" class="sub-link">Assistir Prova (YouTube)</a></p>
-                            <p class="sub-date">Enviado em: {{ new Date(sub.created_at).toLocaleString() }}</p>
-                        </div>
-                        <div class="sub-actions">
-                            <button class="btn-reject" @click="updateStatus(sub.id, 'rejected')">Recusar</button>
-                            <button class="btn-approve" @click="updateStatus(sub.id, 'approved')">Aprovar</button>
-                        </div>
+
+                        <!-- Botão da lixeira (aparece ou fica pronto no hover) -->
+                        <button 
+                            @click="deleteRecord(record.id)" 
+                            title="Apagar recorde"
+                            style="background: #ff4757; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 6px; transition: opacity 0.2s;"
+                        >
+                            🗑️ Apagar
+                        </button>
                     </div>
                 </div>
             </div>
         </main>
     `,
-    data: () => ({
-        submissions: [],
-        loading: true,
-    }),
+    data() {
+        return {
+            records: [],
+            loading: true
+        };
+    },
     async mounted() {
-        await this.fetchSubmissions();
+        await this.fetchRecords();
     },
     methods: {
-        async fetchSubmissions() {
+        async fetchRecords() {
             this.loading = true;
-            try {
-                const { data, error } = await supabase
-                    .from('submissions')
-                    .select('*')
-                    .eq('status', 'pending')
-                    .order('created_at', { ascending: false });
+            // Altere 'records' para o nome exato da sua tabela de recordes no Supabase se for diferente
+            const { data, error } = await supabase
+                .from('records')
+                .select('*')
+                .order('id', { ascending: false });
 
-                if (error) throw error;
-                this.submissions = data || [];
-            } catch (err) {
-                alert('Erro ao carregar submissões: ' + err.message);
-            } finally {
-                this.loading = false;
+            if (error) {
+                console.error('Erro ao buscar recordes:', error.message);
+            } else {
+                this.records = data || [];
             }
+            this.loading = false;
         },
-        async updateStatus(id, newStatus) {
-            try {
-                const { error } = await supabase
-                    .from('submissions')
-                    .update({ status: newStatus })
-                    .eq('id', id);
+        async deleteRecord(id) {
+            if (!confirm('Tem certeza de que deseja apagar este recorde permanentemente?')) return;
 
-                if (error) throw error;
+            const { error } = await supabase
+                .from('records')
+                .delete()
+                .eq('id', id);
 
-                // Remove da lista visual
-                this.submissions = this.submissions.filter(sub => sub.id !== id);
-                alert(newStatus === 'approved' ? 'Recorde aprovado com sucesso!' : 'Recorde recusado.');
-            } catch (err) {
-                alert('Erro ao atualizar status: ' + err.message);
+            if (error) {
+                alert('Erro ao apagar o recorde: ' + error.message);
+            } else {
+                // Remove da lista instantaneamente na tela sem precisar recarregar
+                this.records = this.records.filter(r => r.id !== id);
             }
         }
     }
