@@ -54,6 +54,11 @@
                     <span class="type-label-lg">Roulette</span>
                 </router-link>
                 
+                <!-- BOTÃO DO PAINEL DE MODERADOR (APARECE APENAS PARA LIST MODS) -->
+                <router-link v-if="isMod" class="nav__tab" to="/mod" style="color: #ff4757; font-weight: bold;">
+                    <span class="type-label-lg">Mod Panel</span>
+                </router-link>
+
                 <div class="nav__actions" style="display: flex; align-items: center; gap: 10px;">
                     <button
                         class="nav__icon"
