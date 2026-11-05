@@ -21,8 +21,15 @@ export default {
         <main v-if="loading">
             <Spinner></Spinner>
         </main>
-        <main v-else class="page-list">
-            <div class="list-container">
+        <main v-else class="page-list" :class="{ 'collapse-left': leftCollapsed, 'collapse-right': rightCollapsed }">
+            
+            <!-- BOTÃO PARA MINIMIZAR/EXPANDIR A LISTA DE NÍVEIS (ESQUERDA) -->
+            <button @click="leftCollapsed = !leftCollapsed" class="toggle-sidebar-btn left-toggle" :title="leftCollapsed ? 'Expandir Lista' : 'Minimizar Lista'">
+                <span>☰</span>
+            </button>
+
+            <!-- COLUNA ESQUERDA: LISTA DE NÍVEIS -->
+            <div class="list-container" v-show="!leftCollapsed">
                 <table class="list" v-if="list">
                     <tr v-for="([level, err], i) in list" :key="i">
                         <td class="rank">
@@ -40,6 +47,8 @@ export default {
                     </tr>
                 </table>
             </div>
+
+            <!-- COLUNA CENTRAL: DETALHES DO NÍVEL, VÍDEO E RECORDES -->
             <div class="level-container">
                 <div class="level" v-if="level">
                     <div class="level-header">
@@ -62,7 +71,6 @@ export default {
                     <LevelAuthors :author="level.author" :creators="level.creators" :verifier="level.verifier"></LevelAuthors>
                     <iframe class="video" id="videoframe" :src="video" frameborder="0"></iframe>
                     
-                   
                     <ul class="stats">
                         <li>
                             <div class="type-title-sm">Points when completed</div>
@@ -102,7 +110,7 @@ export default {
                                 <span class="record-hz">{{ record.hz }}Hz</span>
                             </div>
 
-                            <!-- Botão da lixeira que aparece no hover se o usuário for List Mod -->
+                            <!-- Botão da lixeira no hover para moderadores -->
                             <button 
                                 v-if="store.isMod && hoveredIndex === index" 
                                 @click.stop="deleteRecord(record)"
@@ -120,7 +128,13 @@ export default {
                 </div>
             </div>
 
-            <div class="meta-container">
+            <!-- BOTÃO PARA MINIMIZAR/EXPANDIR OS EDITORES E INSTRUÇÕES (DIREITA) -->
+            <button @click="rightCollapsed = !rightCollapsed" class="toggle-sidebar-btn right-toggle" :title="rightCollapsed ? 'Expandir Painel' : 'Minimizar Painel'">
+                <span>☰</span>
+            </button>
+
+            <!-- COLUNA DIREITA: EDITORES E INSTRUÇÕES (JÁ INICIA MINIMIZADA) -->
+            <div class="meta-container" v-show="!rightCollapsed">
                 <div class="meta">
                     <div class="errors" v-show="errors.length > 0">
                         <p class="error" v-for="error of errors">{{ error }}</p>
@@ -139,24 +153,12 @@ export default {
                         </ol>
                     </template>
                     <h3>Instruções de envio</h3>
-                    <p>
-                        Passar o level de forma legitima sem uso de nenhum hack como TPS bypass e Clickbot
-                    </p>
-                    <p>
-                        O vídeo precisa ter ou o áudio original do jogo ou os cliques/toques aparecendo. Só áudio editado não conta.
-                    </p>
-                    <p>
-                        A gravação precisa mostrar o attempt anterior e a animação completa da morte antes do completion — a não ser que a completion tenha sido de primeira tentativa.
-                    </p>
-                    <p>
-                        A gravação também precisa mostrar o jogador encostando no endwall — se não, o completion é invalidado.
-                    </p>
-                    <p>
-                        Não use bug routes ou secret routes (rotas que facilitariam a completion do level)
-                    </p>
-                    <p>
-                        Não use uma versão mais facil/nerfada — só vale record no level original, sem modificação.
-                    </p>
+                    <p>Passar o level de forma legitima sem uso de nenhum hack como TPS bypass e Clickbot</p>
+                    <p>O vídeo precisa ter ou o áudio original do jogo ou os cliques/toques aparecendo. Só áudio editado não conta.</p>
+                    <p>A gravação precisa mostrar o attempt anterior e a animação completa da morte antes do completion — a não ser que a completion tenha sido de primeira tentativa.</p>
+                    <p>A gravação também precisa mostrar o jogador encostando no endwall — se não, o completion é invalidado.</p>
+                    <p>Não use bug routes ou secret routes (rotas que facilitariam a completion do level)</p>
+                    <p>Não use uma versão mais facil/nerfada — só vale record no level original, sem modificação.</p>
                 </div>
             </div>
         </main>
@@ -170,7 +172,9 @@ export default {
         roleIconMap,
         store,
         hoveredIndex: null,
-        approvedSubmissions: {}
+        approvedSubmissions: {},
+        leftCollapsed: false,
+        rightCollapsed: true // Já inicia minimizado conforme solicitado!
     }),
     computed: {
         level() {
@@ -243,7 +247,7 @@ export default {
                             map[sub.level_id] = [];
                         }
                         map[sub.level_id].push({
-                            id: sub.id, // ID guardado para poder deletar direto da tabela submissions
+                            id: sub.id,
                             user: sub.user_name,
                             percent: sub.percent,
                             link: sub.video_link,
@@ -273,7 +277,6 @@ export default {
 
                 if (error) throw error;
 
-                // Remove o recorde da lista local instantaneamente na tela
                 const levelIdStr = String(this.level.id);
                 if (this.approvedSubmissions[levelIdStr]) {
                     this.approvedSubmissions[levelIdStr] = this.approvedSubmissions[levelIdStr].filter(r => r.id !== record.id);
