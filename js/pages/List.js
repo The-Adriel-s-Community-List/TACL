@@ -82,12 +82,15 @@ export default {
                     <p v-else-if="selected + 1 <= 150"><strong>100%</strong> or better to qualify</p>
                     <p v-else>This level does not accept new records.</p>
                     
-                    <!-- CARDS DE RECORDES -->
+                    <!-- CARDS DE RECORDES COM SUPORTE A LIXEIRA NO HOVER PARA MODS -->
                     <div class="records-container" v-if="level.records && level.records.length">
                         <div 
                             v-for="(record, index) in level.records" 
-                            :key="index" 
+                            :key="record.id || index" 
                             class="record-card"
+                            @mouseenter="hoveredIndex = index"
+                            @mouseleave="hoveredIndex = null"
+                            style="position: relative;"
                         >
                             <div class="record-left">
                                 <span class="record-percent">{{ record.percent }}%</span>
@@ -98,43 +101,22 @@ export default {
                                 <img v-if="record.mobile" :src="\`/assets/phone-landscape\${store.dark ? '-dark' : ''}.svg\`" alt="Mobile" class="record-mobile">
                                 <span class="record-hz">{{ record.hz }}Hz</span>
                             </div>
+
+                            <!-- Botão da lixeira que aparece no hover se o usuário for List Mod -->
+                            <button 
+                                v-if="store.isMod && hoveredIndex === index" 
+                                @click.stop="deleteRecord(record)"
+                                title="Apagar Recorde"
+                                style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: #ff4757; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; font-weight: bold; z-index: 10;"
+                            >
+                                🗑️
+                            </button>
                         </div>
                     </div>
                     <p v-else-if="selected + 1 <= 150">No records set yet.</p>
                 </div>
                 <div v-else class="level" style="height: 100%; justify-content: center; align-items: center;">
                     <p>(ノಠ益ಠ)ノ彡┻━┻</p>
-                </div>
-            </div>
-
-            <!-- MODAL DE ENVIO -->
-            <div class="modal-overlay" v-if="showSubmitModal" @click.self="showSubmitModal = false">
-                <div class="modal-content">
-                    <h3>Submit Record - {{ level?.name }}</h3>
-                    <form @submit.prevent="submitRecord">
-                        <label>Teu Nick/Nome:</label>
-                        <input type="text" v-model="form.user_name" required placeholder="Ex: Mamamia898">
-
-                        <label>Porcentagem (%):</label>
-                        <input type="number" v-model="form.percent" min="1" max="100" required placeholder="100">
-
-                        <label>Link do Vídeo (YouTube):</label>
-                        <input type="url" v-model="form.video_link" required placeholder="https://youtube.com/watch?v=...">
-
-                        <label>FPS / Refresh Rate (Hz):</label>
-                        <input type="number" v-model="form.hz" required placeholder="360">
-
-                        <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; margin-top: 5px;">
-                            <input type="checkbox" v-model="form.mobile"> Jogou no Mobile?
-                        </label>
-
-                        <div class="modal-actions">
-                            <button type="button" class="btn-cancel" @click="showSubmitModal = false">Cancelar</button>
-                            <button type="submit" class="btn-submit" :disabled="submitting">
-                                {{ submitting ? 'Enviando...' : 'Enviar Record' }}
-                            </button>
-                        </div>
-                    </form>
                 </div>
             </div>
 
@@ -187,16 +169,8 @@ export default {
         errors: [],
         roleIconMap,
         store,
-        showSubmitModal: false,
-        submitting: false,
-        approvedSubmissions: {},
-        form: {
-            user_name: '',
-            percent: 100,
-            video_link: '',
-            hz: 60,
-            mobile: false
-        }
+        hoveredIndex: null,
+        approvedSubmissions: {}
     }),
     computed: {
         level() {
@@ -229,10 +203,8 @@ export default {
         this.list = await fetchList();
         this.editors = await fetchEditors();
         
-        // Busca os recordes aprovados do Supabase
         await this.fetchApprovedSubmissions();
 
-        // Error handling
         if (!this.list) {
             this.errors = [
                 "Failed to load list. Retry in a few minutes or notify list staff.",
@@ -271,6 +243,7 @@ export default {
                             map[sub.level_id] = [];
                         }
                         map[sub.level_id].push({
+                            id: sub.id, // ID guardado para poder deletar direto da tabela submissions
                             user: sub.user_name,
                             percent: sub.percent,
                             link: sub.video_link,
@@ -284,33 +257,31 @@ export default {
                 console.error('Erro ao buscar recordes aprovados:', err.message);
             }
         },
-        async submitRecord() {
-            this.submitting = true;
+        async deleteRecord(record) {
+            if (!record.id) {
+                alert('Este recorde faz parte do arquivo estático e não pode ser apagado por aqui.');
+                return;
+            }
+
+            if (!confirm(`Tem certeza de que deseja apagar o recorde de ${record.user} (${record.percent}%)?`)) return;
+
             try {
                 const { error } = await supabase
                     .from('submissions')
-                    .insert([
-                        {
-                            user_name: this.form.user_name,
-                            level_id: String(this.level.id),
-                            level_name: this.level.name,
-                            percent: Number(this.form.percent),
-                            video_link: this.form.video_link,
-                            hz: Number(this.form.hz),
-                            mobile: this.form.mobile,
-                            status: 'pending'
-                        }
-                    ]);
+                    .delete()
+                    .eq('id', record.id);
 
                 if (error) throw error;
 
-                alert('Record enviado com sucesso! Aguarde a avaliação dos moderadores.');
-                this.showSubmitModal = false;
-                this.form = { user_name: '', percent: 100, video_link: '', hz: 60, mobile: false };
+                // Remove o recorde da lista local instantaneamente na tela
+                const levelIdStr = String(this.level.id);
+                if (this.approvedSubmissions[levelIdStr]) {
+                    this.approvedSubmissions[levelIdStr] = this.approvedSubmissions[levelIdStr].filter(r => r.id !== record.id);
+                }
+
+                alert('Recorde apagado com sucesso!');
             } catch (err) {
-                alert('Erro ao enviar record: ' + err.message);
-            } finally {
-                this.submitting = false;
+                alert('Erro ao apagar recorde: ' + err.message);
             }
         }
     },
