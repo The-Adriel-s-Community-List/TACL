@@ -62,9 +62,7 @@ export default {
                     <LevelAuthors :author="level.author" :creators="level.creators" :verifier="level.verifier"></LevelAuthors>
                     <iframe class="video" id="videoframe" :src="video" frameborder="0"></iframe>
                     
-                    <!-- BOTÃO DE SUBMIT RECORD -->
-                    <button class="submit-btn" @click="showSubmitModal = true">Submit Record</button>
-
+                   
                     <ul class="stats">
                         <li>
                             <div class="type-title-sm">Points when completed</div>
