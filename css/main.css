@@ -570,3 +570,117 @@ table.records {
     color: #c084fc !important;
     box-shadow: 0 0 10px rgba(168, 85, 247, 0.3) !important;
 }
+/* ==========================================
+   PAINEL DE MODERAÇÃO
+   ========================================== */
+
+.page-mod {
+    padding: 40px 20px;
+    max-width: 900px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.mod-container h2 {
+    margin-bottom: 24px;
+    font-size: 1.8rem;
+    color: var(--color-on-background);
+}
+
+.no-submissions {
+    text-align: center;
+    padding: 40px;
+    background: var(--color-background-hover);
+    border-radius: 12px;
+    opacity: 0.8;
+}
+
+.submissions-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.submission-card {
+    background: var(--color-background-hover);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.sub-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding-bottom: 10px;
+    margin-bottom: 12px;
+}
+
+.sub-level {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: var(--color-on-background);
+}
+
+.sub-percent {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #3b82f6;
+}
+
+.sub-body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 16px;
+    font-size: 0.95rem;
+}
+
+.sub-link {
+    color: #38bdf8;
+    text-decoration: underline;
+}
+
+.sub-date {
+    font-size: 0.8rem;
+    opacity: 0.5;
+    margin-top: 4px;
+}
+
+.sub-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.btn-reject {
+    background: #ef4444;
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-reject:hover {
+    background: #dc2626;
+}
+
+.btn-approve {
+    background: #22c55e;
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-approve:hover {
+    background: #16a34a;
+}
