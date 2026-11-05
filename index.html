@@ -53,7 +53,8 @@
                 <router-link class="nav__tab" to="/roulette">
                     <span class="type-label-lg">Roulette</span>
                 </router-link>
-                <div class="nav__actions">
+                
+                <div class="nav__actions" style="display: flex; align-items: center; gap: 10px;">
                     <button
                         class="nav__icon"
                         @click.prevent="store.toggleDark()"
@@ -63,17 +64,24 @@
                             alt=""
                         />
                     </button>
-                    <!-- Replace the '#' with your discord server's invite-->
-                    <a class="nav__icon" href="https://discord.gg/gCRBKcwsXS">
+                    <a class="nav__icon" href="https://discord.gg/gCRBKcwsXS" target="_blank">
                         <img src="/assets/discord.svg" alt="Discord Logo" />
                     </a>
-                    <!-- List record submission form, add a link to replace the '#' when putting a link to your list submission form-->
-                    <a
-                        class="nav__cta type-label-lg"
-                        href="https://adriellevellist.pages.dev/#/submit"
-                        target="_blank"
-                        >Submit Record</a
-                    >
+
+                    <!-- PERFIL DO DISCORD (LOGADO) -->
+                    <div v-if="user" style="display: flex; align-items: center; gap: 8px;">
+                        <img :src="avatarUrl" style="width: 28px; height: 28px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.2);">
+                        <span class="type-label-lg" style="font-size: 0.85rem;">{{ username }}</span>
+                        <button @click="logout" style="background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #ccc; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">Sair</button>
+                    </div>
+
+                    <!-- BOTÃO LOGIN DISCORD (NÃO LOGADO) -->
+                    <button v-else @click="loginWithDiscord" style="background: #5865F2; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.85rem;">
+                        Login com Discord
+                    </button>
+
+                    <!-- SUBMIT RECORD -->
+                    <router-link class="nav__cta type-label-lg" to="/submit">Submit Record</router-link>
                 </div>
             </nav>
         </header>
