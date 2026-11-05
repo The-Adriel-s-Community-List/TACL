@@ -2,6 +2,7 @@ import { store } from "../main.js";
 import { embed } from "../util.js";
 import { score } from "../score.js";
 import { fetchEditors, fetchList } from "../content.js";
+import { supabase } from "../supabase.js";
 
 import Spinner from "../components/Spinner.js";
 import LevelAuthors from "../components/List/LevelAuthors.js";
@@ -60,6 +61,10 @@ export default {
                     </div>
                     <LevelAuthors :author="level.author" :creators="level.creators" :verifier="level.verifier"></LevelAuthors>
                     <iframe class="video" id="videoframe" :src="video" frameborder="0"></iframe>
+                    
+                    <!-- BOTÃO DE SUBMIT RECORD -->
+                    <button class="submit-btn" @click="showSubmitModal = true">Submit Record</button>
+
                     <ul class="stats">
                         <li>
                             <div class="type-title-sm">Points when completed</div>
@@ -103,6 +108,38 @@ export default {
                     <p>(ノಠ益ಠ)ノ彡┻━┻</p>
                 </div>
             </div>
+
+            <!-- MODAL DE ENVIO -->
+            <div class="modal-overlay" v-if="showSubmitModal" @click.self="showSubmitModal = false">
+                <div class="modal-content">
+                    <h3>Submit Record - {{ level?.name }}</h3>
+                    <form @submit.prevent="submitRecord">
+                        <label>Teu Nick/Nome:</label>
+                        <input type="text" v-model="form.user_name" required placeholder="Ex: Mamamia898">
+
+                        <label>Porcentagem (%):</label>
+                        <input type="number" v-model="form.percent" min="1" max="100" required placeholder="100">
+
+                        <label>Link do Vídeo (YouTube):</label>
+                        <input type="url" v-model="form.video_link" required placeholder="https://youtube.com/watch?v=...">
+
+                        <label>FPS / Refresh Rate (Hz):</label>
+                        <input type="number" v-model="form.hz" required placeholder="360">
+
+                        <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; margin-top: 5px;">
+                            <input type="checkbox" v-model="form.mobile"> Jogou no Mobile?
+                        </label>
+
+                        <div class="modal-actions">
+                            <button type="button" class="btn-cancel" @click="showSubmitModal = false">Cancelar</button>
+                            <button type="submit" class="btn-submit" :disabled="submitting">
+                                {{ submitting ? 'Enviando...' : 'Enviar Record' }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
             <div class="meta-container">
                 <div class="meta">
                     <div class="errors" v-show="errors.length > 0">
@@ -151,7 +188,16 @@ export default {
         selected: 0,
         errors: [],
         roleIconMap,
-        store
+        store,
+        showSubmitModal: false,
+        submitting: false,
+        form: {
+            user_name: '',
+            percent: 100,
+            video_link: '',
+            hz: 60,
+            mobile: false
+        }
     }),
     computed: {
         level() {
@@ -197,5 +243,34 @@ export default {
     methods: {
         embed,
         score,
+        async submitRecord() {
+            this.submitting = true;
+            try {
+                const { error } = await supabase
+                    .from('submissions')
+                    .insert([
+                        {
+                            user_name: this.form.user_name,
+                            level_id: String(this.level.id),
+                            level_name: this.level.name,
+                            percent: Number(this.form.percent),
+                            video_link: this.form.video_link,
+                            hz: Number(this.form.hz),
+                            mobile: this.form.mobile,
+                            status: 'pending'
+                        }
+                    ]);
+
+                if (error) throw error;
+
+                alert('Record enviado com sucesso! Aguarde a avaliação dos moderadores.');
+                this.showSubmitModal = false;
+                this.form = { user_name: '', percent: 100, video_link: '', hz: 60, mobile: false };
+            } catch (err) {
+                alert('Erro ao enviar record: ' + err.message);
+            } finally {
+                this.submitting = false;
+            }
+        }
     },
 };
