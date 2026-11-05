@@ -2,15 +2,51 @@ import List from './pages/List.js';
 import Leaderboard from './pages/Leaderboard.js';
 import Roulette from './pages/Roulette.js';
 import Un from './pages/Un.js';
+import Submit from './pages/Submit.js';
 import ModPanel from './pages/ModPanel.js';
-import Submit from './pages/Submit.js'; 
+import { supabase } from './supabase.js';
+
+const GUILD_ID = '1488342205386068089';
+const MOD_ROLE_ID = '1489765408205574325';
+
+async function checkDiscordModRole() {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session || !session.provider_token) return false;
+
+    try {
+        const response = await fetch(`https://discord.com/api/v10/users/@me/guilds/${GUILD_ID}/member`, {
+            headers: {
+                Authorization: `Bearer ${session.provider_token}`
+            }
+        });
+
+        if (!response.ok) return false;
+
+        const memberData = await response.json();
+        return memberData.roles && memberData.roles.includes(MOD_ROLE_ID);
+    } catch (err) {
+        console.error('Erro ao verificar cargo no guard de rotas:', err);
+        return false;
+    }
+}
 
 export default [
     { path: '/', component: List },
-    { path: '/', component: List }, 
+    { path: '/un', component: Un },
     { path: '/leaderboard', component: Leaderboard },
     { path: '/roulette', component: Roulette },
-    { path: '/Un', component: Un },
-    { path: '/mod', component: ModPanel },
-    { path: '/submit', component: Submit }, 
+    { path: '/submit', component: Submit },
+    { 
+        path: '/mod', 
+        component: ModPanel,
+        beforeEnter: async (to, from, next) => {
+            const isMod = await checkDiscordModRole();
+            if (isMod) {
+                next();
+            } else {
+                alert('Acesso negado: você precisa estar no servidor e possuir o cargo List Mod para acessar este painel.');
+                next('/');
+            }
+        }
+    },
 ];
