@@ -5,46 +5,44 @@ import Spinner from "../components/Spinner.js";
 export default {
     components: { Spinner },
     template: `
-        <main class="page-submit">
-            <div class="submit-container">
-                <h2>Enviar Recorde</h2>
-                <p class="submit-subtitle">Preencha os dados abaixo para enviar o seu recorde para a lista.</p>
+        <div style="padding: 40px; max-width: 600px; margin: 0 auto; color: #fff;">
+            <h2>Enviar Recorde</h2>
+            <p style="opacity: 0.7; margin-bottom: 20px;">Preencha os dados abaixo para enviar o seu recorde.</p>
 
-                <div v-if="loading" style="display: flex; justify-content: center; padding: 40px;">
-                    <Spinner></Spinner>
-                </div>
-
-                <form v-else @submit.prevent="submitRecord" class="submit-form">
-                    <label>Seu Nick/Nome:</label>
-                    <input type="text" v-model="form.user_name" required placeholder="Ex: Mamamia898">
-
-                    <label>Selecione o Nível:</label>
-                    <select v-model="selectedLevelIndex" required>
-                        <option disabled value="">Escolha um nível...</option>
-                        <option v-for="([level, _], index) in list" :key="index" :value="index">
-                            #{{ index + 1 }} - {{ level.name }}
-                        </option>
-                    </select>
-
-                    <label>Porcentagem (%):</label>
-                    <input type="number" v-model="form.percent" min="1" max="100" required placeholder="100">
-
-                    <label>Link do Vídeo (YouTube):</label>
-                    <input type="url" v-model="form.video_link" required placeholder="https://youtube.com/watch?v=...">
-
-                    <label>FPS / Refresh Rate (Hz):</label>
-                    <input type="number" v-model="form.hz" required placeholder="360">
-
-                    <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
-                        <input type="checkbox" v-model="form.mobile"> Jogou no Mobile?
-                    </label>
-
-                    <button type="submit" class="btn-submit-record" :disabled="submitting">
-                        {{ submitting ? 'Enviando...' : 'Enviar Recorde' }}
-                    </button>
-                </form>
+            <div v-if="loading">
+                <Spinner></Spinner>
             </div>
-        </main>
+
+            <form v-else @submit.prevent="submitRecord" style="display: flex; flex-direction: column; gap: 12px; background: #18181b; padding: 24px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+                <label>Seu Nick/Nome:</label>
+                <input type="text" v-model="form.user_name" required placeholder="Ex: Mamamia898" style="background: #27272a; border: 1px solid #3f3f46; color: #fff; padding: 10px; border-radius: 6px;">
+
+                <label>Selecione o Nível:</label>
+                <select v-model="selectedLevelIndex" required style="background: #27272a; border: 1px solid #3f3f46; color: #fff; padding: 10px; border-radius: 6px;">
+                    <option disabled value="">Escolha um nível...</option>
+                    <option v-for="([level, _], index) in list" :key="index" :value="index">
+                        #{{ index + 1 }} - {{ level.name }}
+                    </option>
+                </select>
+
+                <label>Porcentagem (%):</label>
+                <input type="number" v-model="form.percent" min="1" max="100" required placeholder="100" style="background: #27272a; border: 1px solid #3f3f46; color: #fff; padding: 10px; border-radius: 6px;">
+
+                <label>Link do Vídeo (YouTube):</label>
+                <input type="url" v-model="form.video_link" required placeholder="https://youtube.com/watch?v=..." style="background: #27272a; border: 1px solid #3f3f46; color: #fff; padding: 10px; border-radius: 6px;">
+
+                <label>FPS / Refresh Rate (Hz):</label>
+                <input type="number" v-model="form.hz" required placeholder="360" style="background: #27272a; border: 1px solid #3f3f46; color: #fff; padding: 10px; border-radius: 6px;">
+
+                <label style="display: flex; align-items: center; gap: 8px; margin-top: 10px; cursor: pointer;">
+                    <input type="checkbox" v-model="form.mobile"> Jogou no Mobile?
+                </label>
+
+                <button type="submit" :disabled="submitting" style="background: #3b82f6; color: #fff; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px;">
+                    {{ submitting ? 'Enviando...' : 'Enviar Recorde' }}
+                </button>
+            </form>
+        </div>
     `,
     data: () => ({
         list: [],
@@ -92,7 +90,6 @@ export default {
                 if (error) throw error;
 
                 alert('Recorde enviado com sucesso! Aguarde a avaliação dos moderadores.');
-                // Limpar formulário
                 this.form = { user_name: '', percent: 100, video_link: '', hz: 60, mobile: false };
                 this.selectedLevelIndex = '';
             } catch (err) {
