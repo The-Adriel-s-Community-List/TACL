@@ -872,5 +872,77 @@ table.records {
 .right-sidebar .sidebar-toggle-btn {
     left: 15px;
 }
+    /* Layout customizado com transição fluida */
+.page-list.custom-layout {
+    display: grid;
+    grid-template-columns: 350px 1fr 350px;
+    transition: grid-template-columns 0.35s ease-in-out;
+    position: relative;
+}
+
+/* Quando a lista da esquerda for minimizada */
+.page-list.custom-layout.hide-left {
+    grid-template-columns: 60px 1fr 350px;
+}
+
+/* Quando o painel da direita for minimizado */
+.page-list.custom-layout.hide-right {
+    grid-template-columns: 350px 1fr 60px;
+}
+
+/* Quando ambos forem minimizados */
+.page-list.custom-layout.hide-left.hide-right {
+    grid-template-columns: 60px 1fr 60px;
+}
+
+/* Esconde o conteúdo interno mantendo o espaço para o botão */
+.page-list.custom-layout.hide-left .left-sidebar .list-container,
+.page-list.custom-layout.hide-right .right-sidebar .meta-container {
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+}
+
+.sidebar-wrapper {
+    position: relative;
+    overflow: hidden;
+    height: 100%;
+}
+
+/* Botões flutuantes de alternância estilizados e funcionais */
+.floating-toggle {
+    position: fixed;
+    top: 90px;
+    z-index: 9999;
+    background: rgba(30, 30, 30, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(5px);
+    transition: background 0.2s, transform 0.2s, border-color 0.2s;
+}
+
+.floating-toggle:hover {
+    background: rgba(50, 50, 50, 0.95);
+    border-color: rgba(255, 255, 255, 0.4);
+    transform: scale(1.08);
+}
+
+/* Posições exatas dos botões para acompanharem o layout */
+.left-btn {
+    left: 15px;
+}
+
+.right-btn {
+    right: 15px;
+}
     display: none;
 }
