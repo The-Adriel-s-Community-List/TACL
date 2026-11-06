@@ -2,15 +2,8 @@ import routes from './routes.js';
 import { supabase } from './supabase.js';
 import { auth } from './auth.js';
 
-export const store = Vue.reactive({
-    dark: JSON.parse(localStorage.getItem('dark')) || false,
-    isMod: false,
-    profile: null,
-    toggleDark() {
-        this.dark = !this.dark;
-        localStorage.setItem('dark', JSON.stringify(this.dark));
-    },
-});
+import { store } from './store.js';
+export { store } from './store.js';
 
 const GUILD_ID = '1488342205386068089';
 const MOD_ROLE_ID = '1489765408205574325';
