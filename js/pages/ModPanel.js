@@ -135,7 +135,7 @@ export default {
                             </div>
                             
                             <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; font-size: 0.85rem; font-family: monospace;">
-                                <div style="color: #bbb;">E-mail: <span style="color: #fff;">{{ getSuggestedEmail(p.user) }}</span></div>
+                                <div style="color: #bbb;">Usuário: <span style="color: #fff; font-weight: bold;">{{ p.user }}</span></div>
                                 <div style="color: #bbb; margin-top: 4px;">Senha temp: <span style="color: #22c55e; font-weight: bold;">{{ getSuggestedPassword(p.user) }}</span></div>
                             </div>
 
@@ -263,19 +263,17 @@ export default {
             return `TACL#${clean}2026`;
         },
         copySingleAccount(p) {
-            const email = this.getSuggestedEmail(p.user);
             const pass = this.getSuggestedPassword(p.user);
-            const text = `Sua conta na TACL foi criada!\nNick: ${p.user}\nE-mail: ${email}\nSenha provisória: ${pass}\nAcesse e troque sua senha em: ${window.location.origin}/#/perfil`;
+            const text = `Sua conta na TACL foi criada!\nUsuário: ${p.user}\nSenha provisória: ${pass}\nAcesse e troque sua senha em: ${window.location.origin}/#/perfil`;
             navigator.clipboard.writeText(text);
             this.showNotice(`Dados de ${p.user} copiados para a área de transferência!`);
         },
         copyAllAccounts() {
             const lines = this.leaderboardPlayers.map(p => {
-                const email = this.getSuggestedEmail(p.user);
                 const pass = this.getSuggestedPassword(p.user);
-                return `${p.user} | ${email} | ${pass}`;
+                return `${p.user} | ${pass}`;
             });
-            const text = "NICK | EMAIL | SENHA PROVISÓRIA\n" + lines.join("\n");
+            const text = "USUÁRIO | SENHA PROVISÓRIA\n" + lines.join("\n");
             navigator.clipboard.writeText(text);
             this.showNotice(`Lista completa com ${lines.length} contas copiada!`);
         },
