@@ -3,7 +3,23 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=1024" />
-        <title>Adriel's Community List</title>
+        <title>The Adriel's Community List (TACL)</title>
+        <meta name="description" content="Community demon list for Geometry Dash featuring ranked levels, player and creator leaderboards, submissions, and roulette." />
+        <meta property="og:title" content="The Adriel's Community List (TACL)" />
+        <meta property="og:description" content="Community demon list for Geometry Dash featuring ranked levels, player and creator leaderboards, submissions, and roulette." />
+        <script>
+            // Guard against iframe alert restrictions
+            if (typeof window !== 'undefined') {
+                const _alert = window.alert;
+                window.alert = function(msg) {
+                    try {
+                        _alert(msg);
+                    } catch (e) {
+                        console.warn('[Alert]:', msg);
+                    }
+                };
+            }
+        </script>
 
         <link rel="icon" href="/list_icon.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -83,10 +99,16 @@
                         <button @click="logout" style="background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #ccc; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">Sair</button>
                     </div>
 
-                    <!-- BOTÃO LOGIN DISCORD (NÃO LOGADO) -->
-                    <button v-else @click="loginWithDiscord" style="background: #5865F2; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.85rem;">
-                        Login com Discord
-                    </button>
+                    <!-- BOTÃO LOGIN / DISCORD (NÃO LOGADO) -->
+                    <div v-else style="display: flex; align-items: center; gap: 8px;">
+                        <router-link to="/login" style="background: rgba(255,255,255,0.1); color: #fff; padding: 6px 12px; border-radius: 6px; font-weight: bold; text-decoration: none; font-size: 0.85rem;">
+                            Entrar
+                        </router-link>
+                        <button @click="loginWithDiscord" style="background: #5865F2; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; gap: 6px;">
+                            <img src="/assets/discord.svg" style="width: 14px; height: 14px;" alt="">
+                            Discord
+                        </button>
+                    </div>
 
                     <!-- SUBMIT RECORD (CORRIGIDO PARA NÃO ESTOURAR O FUNDO BRANCO) -->
                     <router-link class="nav__cta type-label-lg" to="/submit" style="background: #5865F2 !important; color: #fff !important; border: none; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: bold;">Submit Record</router-link>
