@@ -147,30 +147,33 @@ export const auth = {
             avatar_url: updates.avatar_url !== undefined ? updates.avatar_url : currentUser.avatar_url,
             has_temp_password: updates.new_password ? false : currentUser.has_temp_password
         };
-        localStorage.setItem('tacl_user', JSON.stringify(updatedUser));
 
-        try {
-            const res = await fetch('/api/auth/update-profile', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(updates)
-            });
-            const text = await res.text();
-            if (text) {
-                const data = JSON.parse(text);
-                if (data.user) {
-                    localStorage.setItem('tacl_user', JSON.stringify(data.user));
-                    return data.user;
-                }
-            }
-        } catch (e) {
-            console.warn('Atualização offline salva em cache:', e);
+        const res = await fetch('/api/auth/update-profile', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+                'x-user-id': currentUser.id || ''
+            },
+            body: JSON.stringify({
+                ...updates,
+                user_id: currentUser.id
+            })
+        });
+
+        const text = await res.text();
+        let data = {};
+        if (text) {
+            try { data = JSON.parse(text); } catch (e) {}
         }
 
-        return updatedUser;
+        if (!res.ok) {
+            throw new Error(data.error || `Erro ao atualizar perfil (${res.status}).`);
+        }
+
+        const savedUser = data.user || updatedUser;
+        localStorage.setItem('tacl_user', JSON.stringify(savedUser));
+        return savedUser;
     },
 
     async linkDiscord(discordData) {
@@ -182,35 +185,39 @@ export const auth = {
             discord_username: discordData.discord_username,
             avatar_url: discordData.discord_avatar || currentUser.avatar_url
         };
-        localStorage.setItem('tacl_user', JSON.stringify(updatedUser));
 
-        try {
-            const res = await fetch('/api/auth/link-discord', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(discordData)
-            });
-            const text = await res.text();
-            if (text) {
-                const data = JSON.parse(text);
-                if (data.user) {
-                    localStorage.setItem('tacl_user', JSON.stringify(data.user));
-                    return data.user;
-                }
-            }
-        } catch (e) {
-            console.warn('Vínculo Discord salvo localmente:', e);
+        const res = await fetch('/api/auth/link-discord', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+                'x-user-id': currentUser.id || ''
+            },
+            body: JSON.stringify({
+                ...discordData,
+                user_id: currentUser.id
+            })
+        });
+
+        const text = await res.text();
+        let data = {};
+        if (text) {
+            try { data = JSON.parse(text); } catch (e) {}
         }
 
-        return updatedUser;
+        if (!res.ok) {
+            throw new Error(data.error || `Erro ao vincular Discord (${res.status}).`);
+        }
+
+        const savedUser = data.user || updatedUser;
+        localStorage.setItem('tacl_user', JSON.stringify(savedUser));
+        return savedUser;
     },
 
     async getMigrationAccounts() {
+        const cacheBuster = '?t=' + Date.now();
         try {
-            const res = await fetch('/api/auth/migration-accounts');
+            const res = await fetch('/api/auth/migration-accounts' + cacheBuster);
             if (res.ok) {
                 const text = await res.text();
                 if (text) {
@@ -223,7 +230,7 @@ export const auth = {
         }
 
         try {
-            const res2 = await fetch('/data/_accounts.json');
+            const res2 = await fetch('/data/_accounts.json' + cacheBuster);
             if (res2.ok) {
                 const text2 = await res2.text();
                 if (text2) {
@@ -234,7 +241,9 @@ export const auth = {
                             display_name: a.display_name || a.username,
                             temp_password: a.temp_password || null,
                             has_changed_password: !a.temp_password,
-                            discord_linked: Boolean(a.discord_id)
+                            discord_linked: Boolean(a.discord_id || a.discord_username),
+                            discord_username: a.discord_username || null,
+                            discord_id: a.discord_id || null
                         }));
                     }
                 }

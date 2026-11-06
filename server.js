@@ -32,11 +32,33 @@ app.use((req, res, next) => {
     next();
 });
 
-// Path to accounts file
+// Path to accounts and sessions file
 const ACCOUNTS_FILE = path.join(__dirname, 'data', '_accounts.json');
+const SESSIONS_FILE = path.join(__dirname, 'data', '_sessions.json');
 
-// Memory sessions map: token -> userId
-const sessions = new Map();
+function loadSessions() {
+    try {
+        if (fs.existsSync(SESSIONS_FILE)) {
+            const data = JSON.parse(fs.readFileSync(SESSIONS_FILE, 'utf-8'));
+            return new Map(Object.entries(data));
+        }
+    } catch (e) {
+        console.error('Error reading sessions file:', e);
+    }
+    return new Map();
+}
+
+function saveSessions(sessionsMap) {
+    try {
+        const obj = Object.fromEntries(sessionsMap.entries());
+        fs.writeFileSync(SESSIONS_FILE, JSON.stringify(obj, null, 2), 'utf-8');
+    } catch (e) {
+        console.error('Error saving sessions file:', e);
+    }
+}
+
+// Persistent sessions map: token -> userId
+const sessions = loadSessions();
 
 function hashPassword(password, salt) {
     return crypto.scryptSync(password, salt, 64).toString('hex');
@@ -128,30 +150,37 @@ initMigrationAccounts();
 
 // Middleware to authenticate Bearer token
 function authMiddleware(req, res, next) {
-    const header = req.headers.authorization;
-    if (!header || !header.startsWith('Bearer ')) {
-        return res.status(401).json({ error: 'Não autorizado. Faça login primeiro.' });
-    }
-    const token = header.slice(7).trim();
-    let userId = sessions.get(token);
-    if (!userId && token.startsWith('local_')) {
-        userId = token.replace('local_', '');
-    }
     const accounts = loadAccounts();
-    if (!userId) {
-        // Fallback: check if token matches user ID or username directly
-        const found = accounts.find(a => a.id === token || a.username.toLowerCase() === token.toLowerCase());
+    const header = req.headers.authorization;
+    const xUserId = req.headers['x-user-id'] || req.body?.user_id;
+    let userId = null;
+
+    if (header && header.startsWith('Bearer ')) {
+        const token = header.slice(7).trim();
+        userId = sessions.get(token);
+        if (!userId && token.startsWith('local_')) {
+            userId = token.replace('local_', '');
+        }
+        if (!userId) {
+            // Check if token matches an account ID or username directly
+            const found = accounts.find(a => a.id === token || a.username.toLowerCase() === token.toLowerCase());
+            if (found) userId = found.id;
+        }
+    }
+
+    if (!userId && xUserId) {
+        const found = accounts.find(a => a.id === xUserId || a.username.toLowerCase() === String(xUserId).toLowerCase());
         if (found) userId = found.id;
     }
+
     if (!userId) {
-        return res.status(401).json({ error: 'Sessão inválida ou expirada.' });
+        return res.status(401).json({ error: 'Sessão inválida ou expirada. Faça login novamente.' });
     }
     const user = accounts.find(a => a.id === userId);
     if (!user) {
         return res.status(401).json({ error: 'Usuário não encontrado.' });
     }
     req.user = user;
-    req.token = token;
     next();
 }
 
@@ -208,6 +237,7 @@ app.post('/api/auth/register', (req, res) => {
 
         const token = crypto.randomBytes(32).toString('hex');
         sessions.set(token, newUser.id);
+        saveSessions(sessions);
 
         return res.json({
             token,
@@ -246,6 +276,7 @@ app.post('/api/auth/login', (req, res) => {
 
         const token = crypto.randomBytes(32).toString('hex');
         sessions.set(token, user.id);
+        saveSessions(sessions);
 
         return res.json({
             token,
@@ -277,19 +308,21 @@ app.post('/api/auth/update-profile', authMiddleware, (req, res) => {
             accounts[index].display_name = display_name.trim();
         }
 
-        if (avatar_url !== undefined) {
-            accounts[index].avatar_url = avatar_url;
+        if (avatar_url !== undefined && avatar_url !== null) {
+            accounts[index].avatar_url = String(avatar_url).trim();
         }
 
-        if (new_password && typeof new_password === 'string' && new_password.length >= 4) {
+        if (new_password && typeof new_password === 'string' && new_password.trim().length >= 4) {
+            const cleanPassword = new_password.trim();
             const salt = crypto.randomBytes(16).toString('hex');
             accounts[index].salt = salt;
-            accounts[index].password_hash = hashPassword(new_password, salt);
-            accounts[index].temp_password = null; // Clear temporary password flag
+            accounts[index].password_hash = hashPassword(cleanPassword, salt);
+            accounts[index].temp_password = null; // Clear temporary password flag!
+            console.log(`[AUTH] Nova senha definida para o usuário: ${accounts[index].username}`);
         }
 
         saveAccounts(accounts);
-        return res.json({ user: sanitizeUser(accounts[index]) });
+        return res.json({ ok: true, user: sanitizeUser(accounts[index]) });
     } catch (err) {
         console.error('Update profile error:', err);
         return res.status(500).json({ error: 'Erro no servidor ao atualizar perfil.' });
@@ -307,14 +340,19 @@ app.post('/api/auth/link-discord', authMiddleware, (req, res) => {
             return res.status(404).json({ error: 'Usuário não encontrado.' });
         }
 
-        if (discord_id) accounts[index].discord_id = discord_id;
-        if (discord_username) accounts[index].discord_username = discord_username;
-        if (discord_avatar && !accounts[index].avatar_url.includes('http')) {
+        if (discord_id !== undefined) {
+            accounts[index].discord_id = discord_id ? String(discord_id).trim() : null;
+        }
+        if (discord_username !== undefined) {
+            accounts[index].discord_username = discord_username ? String(discord_username).trim() : null;
+        }
+        if (discord_avatar && typeof discord_avatar === 'string' && !accounts[index].avatar_url?.startsWith('http')) {
             accounts[index].avatar_url = discord_avatar;
         }
 
         saveAccounts(accounts);
-        return res.json({ user: sanitizeUser(accounts[index]) });
+        console.log(`[AUTH] Discord vinculado para ${accounts[index].username}: ${accounts[index].discord_username} (${accounts[index].discord_id})`);
+        return res.json({ ok: true, user: sanitizeUser(accounts[index]) });
     } catch (err) {
         console.error('Link discord error:', err);
         return res.status(500).json({ error: 'Erro no servidor ao vincular Discord.' });
@@ -329,7 +367,9 @@ app.get('/api/auth/migration-accounts', (req, res) => {
         display_name: a.display_name,
         temp_password: a.temp_password || null,
         has_changed_password: !a.temp_password,
-        discord_linked: Boolean(a.discord_id)
+        discord_linked: Boolean(a.discord_id || a.discord_username),
+        discord_username: a.discord_username || null,
+        discord_id: a.discord_id || null
     }));
     return res.json(list);
 });

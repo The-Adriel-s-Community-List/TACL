@@ -156,9 +156,15 @@ export default {
                             
                             <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; font-size: 0.85rem; font-family: monospace;">
                                 <div style="color: #bbb;">Usuário: <span style="color: #fff; font-weight: bold;">{{ p.user }}</span></div>
-                                <div style="color: #bbb; margin-top: 4px;">Senha: <span style="color: #22c55e; font-weight: bold;">{{ p.temp_password || '*(Alterada pelo usuário)*' }}</span></div>
-                                <div style="color: #888; font-size: 0.75rem; margin-top: 4px;">
-                                    Discord: {{ p.discord_linked ? 'Conectado' : 'Não vinculado' }}
+                                <div style="color: #bbb; margin-top: 4px;">Senha: <span :style="{ color: p.temp_password ? '#22c55e' : '#a5b4fc', fontWeight: 'bold' }">{{ p.temp_password || '*(Alterada pelo usuário)*' }}</span></div>
+                                <div style="margin-top: 6px; font-size: 0.8rem;">
+                                    Discord: 
+                                    <span v-if="p.discord_linked" style="color: #4ade80; font-weight: bold;">
+                                        ● Conectado ({{ p.discord_username ? ('@' + p.discord_username) : ('ID: ' + p.discord_id) }})
+                                    </span>
+                                    <span v-else style="color: #facc15;">
+                                        ○ Não vinculado
+                                    </span>
                                 </div>
                             </div>
 
