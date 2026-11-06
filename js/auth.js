@@ -1,113 +1,116 @@
-// Client Authentication Service for TACL
-
-export const auth = {
-    async register(username, password) {
-        const res = await fetch('/api/auth/register', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Erro ao registrar.');
-        localStorage.setItem('tacl_token', data.token);
-        return data.user;
-    },
-
-    async login(username, password) {
-        const res = await fetch('/api/auth/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Erro ao entrar.');
-        localStorage.setItem('tacl_token', data.token);
-        return data.user;
-    },
-
-    async getProfile() {
-        const token = localStorage.getItem('tacl_token');
-        if (!token) return null;
-        try {
-            const res = await fetch('/api/auth/me', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (!res.ok) {
-                localStorage.removeItem('tacl_token');
-                return null;
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=1024" />
+        <title>The Adriel's Community List (TACL)</title>
+        <meta name="description" content="Community demon list for Geometry Dash featuring ranked levels, player and creator leaderboards, submissions, and roulette." />
+        <meta property="og:title" content="The Adriel's Community List (TACL)" />
+        <meta property="og:description" content="Community demon list for Geometry Dash featuring ranked levels, player and creator leaderboards, submissions, and roulette." />
+        <script>
+            // Guard against iframe alert restrictions
+            if (typeof window !== 'undefined') {
+                const _alert = window.alert;
+                window.alert = function(msg) {
+                    try {
+                        _alert(msg);
+                    } catch (e) {
+                        console.warn('[Alert]:', msg);
+                    }
+                };
             }
-            const data = await res.json();
-            return data.user;
-        } catch (e) {
-            return null;
-        }
-    },
+        </script>
 
-    async updateProfile(updates) {
-        const token = localStorage.getItem('tacl_token');
-        if (!token) throw new Error('Você precisa estar logado.');
-        const res = await fetch('/api/auth/update-profile', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify(updates)
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Erro ao atualizar perfil.');
-        return data.user;
-    },
+        <link rel="icon" href="/list_icon.png" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Lexend+Deca:wght@500;700&display=swap"
+            rel="stylesheet"
+        />
+        <link rel="stylesheet" type="text/css" href="/css/reset.css" />
+        <link rel="stylesheet" type="text/css" href="/css/typography.css" />
+        <link rel="stylesheet" type="text/css" href="/css/main.css" />
+        <link rel="stylesheet" type="text/css" href="/css/pages/list.css" />
+        <link
+            rel="stylesheet"
+            type="text/css"
+            href="/css/pages/leaderboard.css"
+        />
+        <link rel="stylesheet" type="text/css" href="/css/pages/roulette.css" />
+        <link rel="stylesheet" type="text/css" href="/css/components/nav.css" />
+        <link rel="stylesheet" type="text/css" href="/css/components/btn.css" />
+        <link
+            rel="stylesheet"
+            type="text/css"
+            href="/css/components/tabs.css"
+        />
+        <script src="https://unpkg.com/vue@3.2.31/dist/vue.global.js"></script>
+        <script src="https://unpkg.com/vue-router@4.0.14/dist/vue-router.global.prod.js"></script>
+        <script type="module" src="/js/main.js"></script>
+    </head>
+    <body id="app">
+        <header :class="{ dark: store.dark }">
+            <div class="logo">
+                <h2>TACL</h2>
+                <p>v1.0</p>
+            </div>
+            <nav class="nav">
+                <router-link class="nav__tab" to="/">
+                    <span class="type-label-lg">List</span>
+                </router-link>
+                <router-link class="nav__tab" to="/Un">
+                    <span class="type-label-lg">Unverified levels</span>
+                </router-link>
+                <router-link class="nav__tab" to="/leaderboard">
+                    <span class="type-label-lg">Leaderboard</span>
+                </router-link>
+                <router-link class="nav__tab" to="/roulette">
+                    <span class="type-label-lg">Roulette</span>
+                </router-link>
+                
+                <!-- BOTÃO DO PAINEL DE MODERADOR (APARECE APENAS PARA LIST MODS) -->
+                <router-link v-if="isMod" class="nav__tab" to="/mod" style="color: #ff4757; font-weight: bold;">
+                    <span class="type-label-lg">Mod Panel</span>
+                </router-link>
 
-    async linkDiscord(discordData) {
-        const token = localStorage.getItem('tacl_token');
-        if (!token) throw new Error('Você precisa estar logado.');
-        const res = await fetch('/api/auth/link-discord', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify(discordData)
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Erro ao vincular Discord.');
-        return data.user;
-    },
+                <div class="nav__actions" style="display: flex; align-items: center; gap: 10px;">
+                    <button
+                        class="nav__icon"
+                        @click.prevent="store.toggleDark()"
+                    >
+                        <img
+                            :src="store.dark ? '/assets/light.svg' : '/assets/dark.svg'"
+                            alt=""
+                        />
+                    </button>
+                    <a class="nav__icon" href="https://discord.gg/gCRBKcwsXS" target="_blank">
+                        <img src="/assets/discord.svg" alt="Discord Logo" />
+                    </a>
 
-    async getMigrationAccounts() {
-        try {
-            const res = await fetch('/api/auth/migration-accounts');
-            if (res.ok) {
-                const data = await res.json();
-                if (Array.isArray(data) && data.length > 0) return data;
-            }
-        } catch (e) {
-            console.warn('Falha na rota /api/auth/migration-accounts, tentando /data/_accounts.json:', e);
-        }
+                    <!-- PERFIL DO DISCORD (LOGADO) -->
+                    <div v-if="user" style="display: flex; align-items: center; gap: 8px;">
+                        <router-link to="/perfil" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: inherit;"><img :src="avatarUrl" style="width: 28px; height: 28px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.2);">
+                        <span class="type-label-lg" style="font-size: 0.85rem;">{{ username }}</span></router-link>
+                        <button @click="logout" style="background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #ccc; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">Sair</button>
+                    </div>
 
-        try {
-            const res2 = await fetch('/data/_accounts.json');
-            if (res2.ok) {
-                const data2 = await res2.json();
-                if (Array.isArray(data2)) {
-                    return data2.map(a => ({
-                        user: a.username,
-                        display_name: a.display_name || a.username,
-                        temp_password: a.temp_password || null,
-                        has_changed_password: !a.temp_password,
-                        discord_linked: Boolean(a.discord_id)
-                    }));
-                }
-            }
-        } catch (e2) {
-            console.warn('Falha no fallback:', e2);
-        }
+                    <!-- BOTÃO LOGIN / DISCORD (NÃO LOGADO) -->
+                    <div v-else style="display: flex; align-items: center; gap: 8px;">
+                        <router-link to="/login" style="background: rgba(255,255,255,0.1); color: #fff; padding: 6px 12px; border-radius: 6px; font-weight: bold; text-decoration: none; font-size: 0.85rem;">
+                            Entrar
+                        </router-link>
+                        <button @click="loginWithDiscord" style="background: #5865F2; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; gap: 6px;">
+                            <img src="/assets/discord.svg" style="width: 14px; height: 14px;" alt="">
+                            Discord
+                        </button>
+                    </div>
 
-        return [];
-    },
-
-    logout() {
-        localStorage.removeItem('tacl_token');
-    }
-};
+                    <!-- SUBMIT RECORD (CORRIGIDO PARA NÃO ESTOURAR O FUNDO BRANCO) -->
+                    <router-link class="nav__cta type-label-lg" to="/submit" style="background: #5865F2 !important; color: #fff !important; border: none; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: bold;">Submit Record</router-link>
+                </div>
+            </nav>
+        </header>
+        <router-view :class="{ dark: store.dark }"></router-view>
+    </body>
+</html>
