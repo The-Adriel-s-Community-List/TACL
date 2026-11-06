@@ -13,6 +13,14 @@ const HOST = process.env.HOST || '0.0.0.0';
 
 app.use(express.json());
 
+// Prevent stale caching of scripts, data, and API responses
+app.use((req, res, next) => {
+    if (req.path.startsWith('/api/') || req.path.endsWith('.js') || req.path.endsWith('.json')) {
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+    }
+    next();
+});
+
 // Path to accounts file
 const ACCOUNTS_FILE = path.join(__dirname, 'data', '_accounts.json');
 
