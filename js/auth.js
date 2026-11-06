@@ -76,8 +76,35 @@ export const auth = {
     },
 
     async getMigrationAccounts() {
-        const res = await fetch('/api/auth/migration-accounts');
-        return await res.json();
+        try {
+            const res = await fetch('/api/auth/migration-accounts');
+            if (res.ok) {
+                const data = await res.json();
+                if (Array.isArray(data) && data.length > 0) return data;
+            }
+        } catch (e) {
+            console.warn('Falha na rota /api/auth/migration-accounts, tentando /data/_accounts.json:', e);
+        }
+
+        try {
+            const res2 = await fetch('/data/_accounts.json');
+            if (res2.ok) {
+                const data2 = await res2.json();
+                if (Array.isArray(data2)) {
+                    return data2.map(a => ({
+                        user: a.username,
+                        display_name: a.display_name || a.username,
+                        temp_password: a.temp_password || null,
+                        has_changed_password: !a.temp_password,
+                        discord_linked: Boolean(a.discord_id)
+                    }));
+                }
+            }
+        } catch (e2) {
+            console.warn('Falha no fallback:', e2);
+        }
+
+        return [];
     },
 
     logout() {
