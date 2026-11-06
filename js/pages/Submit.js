@@ -1,6 +1,7 @@
 import { supabase } from "../supabase.js";
 import { fetchList } from "../content.js";
 import Spinner from "../components/Spinner.js";
+import { store } from "../main.js";
 
 export default {
     components: { Spinner },
@@ -60,6 +61,9 @@ export default {
     }),
     async mounted() {
         this.list = await fetchList();
+        if (store.profile?.display_name) {
+            this.form.user_name = store.profile.display_name;
+        }
         this.loading = false;
     },
     methods: {
