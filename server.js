@@ -11,6 +11,17 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
 
+// CORS & Preflight handling
+app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
+    next();
+});
+
 app.use(express.json());
 
 // Prevent stale caching of scripts, data, and API responses
@@ -152,76 +163,90 @@ function sanitizeUser(u) {
 
 // Register
 app.post('/api/auth/register', (req, res) => {
-    const { username, password } = req.body;
-    if (!username || typeof username !== 'string' || !username.trim()) {
-        return res.status(400).json({ error: 'Nome de usuário inválido.' });
+    try {
+        const { username, password } = req.body || {};
+        if (!username || typeof username !== 'string' || !username.trim()) {
+            return res.status(400).json({ error: 'Nome de usuário inválido.' });
+        }
+        if (!password || typeof password !== 'string' || password.length < 4) {
+            return res.status(400).json({ error: 'A senha deve ter pelo menos 4 caracteres.' });
+        }
+
+        const trimmedUsername = username.trim();
+        const accounts = loadAccounts();
+
+        if (accounts.some(a => a.username.toLowerCase() === trimmedUsername.toLowerCase())) {
+            return res.status(400).json({ error: 'Este nome de usuário já está registrado. Escolha outro ou faça login.' });
+        }
+
+        const salt = crypto.randomBytes(16).toString('hex');
+        const passwordHash = hashPassword(password, salt);
+
+        const newUser = {
+            id: crypto.randomUUID(),
+            username: trimmedUsername,
+            display_name: trimmedUsername,
+            avatar_url: 'https://cdn.discordapp.com/embed/avatars/0.png',
+            salt,
+            password_hash: passwordHash,
+            temp_password: null,
+            discord_id: null,
+            discord_username: null,
+            created_at: new Date().toISOString()
+        };
+
+        accounts.push(newUser);
+        saveAccounts(accounts);
+
+        const token = crypto.randomBytes(32).toString('hex');
+        sessions.set(token, newUser.id);
+
+        return res.json({
+            token,
+            user: sanitizeUser(newUser)
+        });
+    } catch (err) {
+        console.error('Register error:', err);
+        return res.status(500).json({ error: 'Erro no servidor ao criar conta.' });
     }
-    if (!password || typeof password !== 'string' || password.length < 4) {
-        return res.status(400).json({ error: 'A senha deve ter pelo menos 4 caracteres.' });
-    }
-
-    const trimmedUsername = username.trim();
-    const accounts = loadAccounts();
-
-    if (accounts.some(a => a.username.toLowerCase() === trimmedUsername.toLowerCase())) {
-        return res.status(400).json({ error: 'Este nome de usuário já está registrado. Escolha outro ou faça login.' });
-    }
-
-    const salt = crypto.randomBytes(16).toString('hex');
-    const passwordHash = hashPassword(password, salt);
-
-    const newUser = {
-        id: crypto.randomUUID(),
-        username: trimmedUsername,
-        display_name: trimmedUsername,
-        avatar_url: 'https://cdn.discordapp.com/embed/avatars/0.png',
-        salt,
-        password_hash: passwordHash,
-        temp_password: null,
-        discord_id: null,
-        discord_username: null,
-        created_at: new Date().toISOString()
-    };
-
-    accounts.push(newUser);
-    saveAccounts(accounts);
-
-    const token = crypto.randomBytes(32).toString('hex');
-    sessions.set(token, newUser.id);
-
-    return res.json({
-        token,
-        user: sanitizeUser(newUser)
-    });
 });
 
 // Login
 app.post('/api/auth/login', (req, res) => {
-    const { username, password } = req.body;
-    if (!username || !password) {
-        return res.status(400).json({ error: 'Informe usuário e senha.' });
+    try {
+        const { username, password } = req.body || {};
+        if (!username || !password) {
+            return res.status(400).json({ error: 'Informe usuário e senha.' });
+        }
+
+        const trimmedUsername = String(username).trim();
+        const trimmedPassword = String(password).trim();
+        const accounts = loadAccounts();
+        const user = accounts.find(a => a.username.toLowerCase() === trimmedUsername.toLowerCase());
+
+        if (!user) {
+            return res.status(401).json({ error: 'Usuário não encontrado. Verifique se digitou corretamente.' });
+        }
+
+        // Direct temp_password check OR hash check
+        const isMatch = (user.temp_password && user.temp_password === trimmedPassword) ||
+                        (hashPassword(trimmedPassword, user.salt) === user.password_hash);
+
+        if (!isMatch) {
+            return res.status(401).json({ error: 'Senha incorreta.' });
+        }
+
+        const token = crypto.randomBytes(32).toString('hex');
+        sessions.set(token, user.id);
+
+        return res.json({
+            token,
+            user: sanitizeUser(user)
+        });
+    } catch (err) {
+        console.error('Login error:', err);
+        return res.status(500).json({ error: 'Erro no servidor ao autenticar.' });
     }
-
-    const trimmedUsername = username.trim();
-    const accounts = loadAccounts();
-    const user = accounts.find(a => a.username.toLowerCase() === trimmedUsername.toLowerCase());
-
-    if (!user) {
-        return res.status(401).json({ error: 'Usuário não encontrado. Verifique se digitou corretamente ou crie uma conta.' });
-    }
-
-    const inputHash = hashPassword(password, user.salt);
-    if (inputHash !== user.password_hash) {
-        return res.status(401).json({ error: 'Senha incorreta.' });
-    }
-
-    const token = crypto.randomBytes(32).toString('hex');
-    sessions.set(token, user.id);
-
-    return res.json({
-        token,
-        user: sanitizeUser(user)
-    });
 });
 
 // Current User Profile
@@ -231,51 +256,61 @@ app.get('/api/auth/me', authMiddleware, (req, res) => {
 
 // Update Profile
 app.post('/api/auth/update-profile', authMiddleware, (req, res) => {
-    const { display_name, avatar_url, new_password } = req.body;
-    const accounts = loadAccounts();
-    const index = accounts.findIndex(a => a.id === req.user.id);
+    try {
+        const { display_name, avatar_url, new_password } = req.body || {};
+        const accounts = loadAccounts();
+        const index = accounts.findIndex(a => a.id === req.user.id);
 
-    if (index === -1) {
-        return res.status(404).json({ error: 'Usuário não encontrado.' });
+        if (index === -1) {
+            return res.status(404).json({ error: 'Usuário não encontrado.' });
+        }
+
+        if (display_name && typeof display_name === 'string' && display_name.trim()) {
+            accounts[index].display_name = display_name.trim();
+        }
+
+        if (avatar_url !== undefined) {
+            accounts[index].avatar_url = avatar_url;
+        }
+
+        if (new_password && typeof new_password === 'string' && new_password.length >= 4) {
+            const salt = crypto.randomBytes(16).toString('hex');
+            accounts[index].salt = salt;
+            accounts[index].password_hash = hashPassword(new_password, salt);
+            accounts[index].temp_password = null; // Clear temporary password flag
+        }
+
+        saveAccounts(accounts);
+        return res.json({ user: sanitizeUser(accounts[index]) });
+    } catch (err) {
+        console.error('Update profile error:', err);
+        return res.status(500).json({ error: 'Erro no servidor ao atualizar perfil.' });
     }
-
-    if (display_name && typeof display_name === 'string' && display_name.trim()) {
-        accounts[index].display_name = display_name.trim();
-    }
-
-    if (avatar_url !== undefined) {
-        accounts[index].avatar_url = avatar_url;
-    }
-
-    if (new_password && typeof new_password === 'string' && new_password.length >= 4) {
-        const salt = crypto.randomBytes(16).toString('hex');
-        accounts[index].salt = salt;
-        accounts[index].password_hash = hashPassword(new_password, salt);
-        accounts[index].temp_password = null; // Clear temporary password flag
-    }
-
-    saveAccounts(accounts);
-    return res.json({ user: sanitizeUser(accounts[index]) });
 });
 
 // Link Discord
 app.post('/api/auth/link-discord', authMiddleware, (req, res) => {
-    const { discord_id, discord_username, discord_avatar } = req.body;
-    const accounts = loadAccounts();
-    const index = accounts.findIndex(a => a.id === req.user.id);
+    try {
+        const { discord_id, discord_username, discord_avatar } = req.body || {};
+        const accounts = loadAccounts();
+        const index = accounts.findIndex(a => a.id === req.user.id);
 
-    if (index === -1) {
-        return res.status(404).json({ error: 'Usuário não encontrado.' });
+        if (index === -1) {
+            return res.status(404).json({ error: 'Usuário não encontrado.' });
+        }
+
+        if (discord_id) accounts[index].discord_id = discord_id;
+        if (discord_username) accounts[index].discord_username = discord_username;
+        if (discord_avatar && !accounts[index].avatar_url.includes('http')) {
+            accounts[index].avatar_url = discord_avatar;
+        }
+
+        saveAccounts(accounts);
+        return res.json({ user: sanitizeUser(accounts[index]) });
+    } catch (err) {
+        console.error('Link discord error:', err);
+        return res.status(500).json({ error: 'Erro no servidor ao vincular Discord.' });
     }
-
-    if (discord_id) accounts[index].discord_id = discord_id;
-    if (discord_username) accounts[index].discord_username = discord_username;
-    if (discord_avatar && !accounts[index].avatar_url.includes('http')) {
-        accounts[index].avatar_url = discord_avatar;
-    }
-
-    saveAccounts(accounts);
-    return res.json({ user: sanitizeUser(accounts[index]) });
 });
 
 // List Migration Accounts for Mod Panel
