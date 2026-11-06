@@ -114,11 +114,24 @@ export default {
                             >
                                 Copiar Todas as Contas (Texto Formatado)
                             </button>
+                            <button 
+                                @click="loadLeaderboardPlayers" 
+                                style="background: rgba(255,255,255,0.1); color: white; border: none; padding: 10px 16px; border-radius: 6px; font-weight: bold; cursor: pointer;"
+                            >
+                                🔄 Recarregar Lista
+                            </button>
                         </div>
                     </div>
 
-                    <div v-if="loadingPlayers" style="text-align: center; padding: 30px;">
-                        Carregando contas do servidor...
+                    <div v-if="loadingPlayers" style="text-align: center; padding: 30px; color: #aaa;">
+                        <p>Carregando contas dos jogadores...</p>
+                    </div>
+
+                    <div v-else-if="leaderboardPlayers.length === 0" style="text-align: center; padding: 40px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                        <p style="color: #aaa; margin-bottom: 12px;">Nenhuma conta encontrada ou houve um atraso no carregamento.</p>
+                        <button @click="loadLeaderboardPlayers" style="background: #5865F2; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold;">
+                            Carregar Contas Novamente
+                        </button>
                     </div>
 
                     <div v-else style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px;">
@@ -223,7 +236,6 @@ export default {
         },
         async notifyDiscordBot(sub, status) {
             try {
-                // Checa no banco de contas local se o jogador tem discord_id vinculado
                 const accounts = await auth.getMigrationAccounts();
                 const matched = accounts.find(a => a.user.toLowerCase() === sub.user_name.toLowerCase());
 
