@@ -315,5 +315,40 @@ html, body, #app, .page-list-wrapper {
 .right-col .panel-toggle-btn {
     align-self: flex-end;
 }
+/* Limita a altura da lista de níveis à altura da tela e ativa o scroll próprio */
+.list-container {
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 5px;
+}
+
+/* Estilo moderno e minimalista para a scrollbar (compatível com Chrome, Edge, Safari e Firefox) */
+
+/* Para navegadores baseados em WebKit (Chrome, Edge, Safari) */
+.list-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.list-container::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+}
+
+.list-container::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    transition: background 0.2s;
+}
+
+.list-container::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.4);
+}
+
+/* Para Firefox */
+.list-container {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) rgba(0, 0, 0, 0.1);
+}
 .tag-2-players      { background-color: #16a085; }
 .tag-ship           { background-color: #e84393; }
