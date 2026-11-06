@@ -4,6 +4,8 @@ import Roulette from './pages/Roulette.js';
 import Un from './pages/Un.js';
 import Submit from './pages/Submit.js';
 import ModPanel from './pages/ModPanel.js';
+import Auth from './pages/Auth.js';
+import Profile from './pages/Profile.js';
 import { supabase } from './supabase.js';
 import { store } from './main.js';
 
@@ -43,6 +45,8 @@ export default [
     { path: '/leaderboard', component: Leaderboard },
     { path: '/roulette', component: Roulette },
     { path: '/submit', component: Submit },
+    { path: '/login', component: Auth },
+    { path: '/perfil', component: Profile },
     { 
         path: '/mod', 
         component: ModPanel,
