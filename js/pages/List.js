@@ -21,25 +21,34 @@ export default {
         <main v-if="loading">
             <Spinner></Spinner>
         </main>
-        <main v-else class="page-list">
-            <div class="list-container">
-                <table class="list" v-if="list">
-                    <tr v-for="([level, err], i) in list" :key="i">
-                        <td class="rank">
-                            <p v-if="i + 1 <= 75" class="type-label-lg">#{{ i + 1 }}</p>
-                            <p v-else class="type-label-lg">Legacy</p>
-                        </td>
-                        <td class="level" :class="[{ 'active': selected == i, 'error': !level }, level?.rating ? 'rating-' + level.rating.toLowerCase() : '']">
-                            <button @click="selected = i">
-                                <span class="type-label-lg level-name-text">{{ level?.name || 'Error (' + err + '.json)' }}</span>
-                                <span v-if="level?.rating" :class="['rating-badge', 'badge-' + level.rating.toLowerCase()]">
-                                    {{ level.rating }}
-                                </span>
-                            </button>
-                        </td>
-                    </tr>
-                </table>
+        <main v-else class="page-list clean-layout" :class="{ 'collapsed-left': leftCollapsed, 'collapsed-right': rightCollapsed }">
+            
+            <!-- COLUNA ESQUERDA: LISTA DE NÍVEIS -->
+            <div class="sidebar-col left-col">
+                <button @click="leftCollapsed = !leftCollapsed" class="panel-toggle-btn" :title="leftCollapsed ? 'Expandir Lista' : 'Minimizar Lista'">
+                    ☰
+                </button>
+                <div class="sidebar-content" v-show="!leftCollapsed">
+                    <table class="list" v-if="list">
+                        <tr v-for="([level, err], i) in list" :key="i">
+                            <td class="rank">
+                                <p v-if="i + 1 <= 75" class="type-label-lg">#{{ i + 1 }}</p>
+                                <p v-else class="type-label-lg">Legacy</p>
+                            </td>
+                            <td class="level" :class="[{ 'active': selected == i, 'error': !level }, level?.rating ? 'rating-' + level.rating.toLowerCase() : '']">
+                                <button @click="selected = i">
+                                    <span class="type-label-lg level-name-text">{{ level?.name || 'Error (' + err + '.json)' }}</span>
+                                    <span v-if="level?.rating" :class="['rating-badge', 'badge-' + level.rating.toLowerCase()]">
+                                        {{ level.rating }}
+                                    </span>
+                                </button>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
             </div>
+
+            <!-- COLUNA CENTRAL: DETALHES DO NÍVEL E VÍDEO -->
             <div class="level-container">
                 <div class="level" v-if="level">
                     <div class="level-header">
@@ -61,6 +70,7 @@ export default {
                     </div>
                     <LevelAuthors :author="level.author" :creators="level.creators" :verifier="level.verifier"></LevelAuthors>
                     <iframe class="video" id="videoframe" :src="video" frameborder="0"></iframe>
+                    
                     <ul class="stats">
                         <li>
                             <div class="type-title-sm">Points when completed</div>
@@ -116,33 +126,41 @@ export default {
                     <p>(ノಠ益ಠ)ノ彡┻━┻</p>
                 </div>
             </div>
-            <div class="meta-container">
-                <div class="meta">
-                    <div class="errors" v-show="errors.length > 0">
-                        <p class="error" v-for="error of errors">{{ error }}</p>
+
+            <!-- COLUNA DIREITA: EDITORES E INSTRUÇÕES -->
+            <div class="sidebar-col right-col">
+                <button @click="rightCollapsed = !rightCollapsed" class="panel-toggle-btn" :title="rightCollapsed ? 'Expandir Painel' : 'Minimizar Painel'">
+                    ☰
+                </button>
+                <div class="sidebar-content" v-show="!rightCollapsed">
+                    <div class="meta">
+                        <div class="errors" v-show="errors.length > 0">
+                            <p class="error" v-for="error of errors">{{ error }}</p>
+                        </div>
+                        <div class="og">
+                            <p class="type-label-md">Website layout made by <a href="https://tsl.pages.dev/" target="_blank">TheShittyList</a></p>
+                        </div>
+                        <template v-if="editors">
+                            <h3>List Editors</h3>
+                            <ol class="editors">
+                                <li v-for="editor in editors">
+                                    <img :src="'/assets/' + roleIconMap[editor.role] + (store.dark ? '-dark' : '') + '.svg'" :alt="editor.role">
+                                    <a v-if="editor.link" class="type-label-lg link" target="_blank" :href="editor.link">{{ editor.name }}</a>
+                                    <p v-else>{{ editor.name }}</p>
+                                </li>
+                            </ol>
+                        </template>
+                        <h3>Instruções de envio</h3>
+                        <p>Passar o level de forma legitima sem uso de nenhum hack como TPS bypass e Clickbot</p>
+                        <p>O vídeo precisa ter ou o áudio original do jogo ou os cliques/toques aparecendo. Só áudio editado não conta.</p>
+                        <p>A gravação precisa mostrar o attempt anterior e a animação completa da morte antes do completion — a não ser que a completion tenha sido de primeira tentativa.</p>
+                        <p>A gravação também precisa mostrar o jogador encostando no endwall — se não, o completion é invalidado.</p>
+                        <p>Não use bug routes ou secret routes (rotas que facilitariam a completion do level)</p>
+                        <p>Não use uma versão mais facil/nerfada — só vale record no level original, sem modificação.</p>
                     </div>
-                    <div class="og">
-                        <p class="type-label-md">Website layout made by <a href="https://tsl.pages.dev/" target="_blank">TheShittyList</a></p>
-                    </div>
-                    <template v-if="editors">
-                        <h3>List Editors</h3>
-                        <ol class="editors">
-                            <li v-for="editor in editors">
-                                <img :src="'/assets/' + roleIconMap[editor.role] + (store.dark ? '-dark' : '') + '.svg'" :alt="editor.role">
-                                <a v-if="editor.link" class="type-label-lg link" target="_blank" :href="editor.link">{{ editor.name }}</a>
-                                <p v-else>{{ editor.name }}</p>
-                            </li>
-                        </ol>
-                    </template>
-                    <h3>Instruções de envio</h3>
-                    <p>Passar o level de forma legitima sem uso de nenhum hack como TPS bypass e Clickbot</p>
-                    <p>O vídeo precisa ter ou o áudio original do jogo ou os cliques/toques aparecendo. Só áudio editado não conta.</p>
-                    <p>A gravação precisa mostrar o attempt anterior e a animação completa da morte antes do completion — a não ser que a completion tenha sido de primeira tentativa.</p>
-                    <p>A gravação também precisa mostrar o jogador encostando no endwall — se não, o completion é invalidado.</p>
-                    <p>Não use bug routes ou secret routes (rotas que facilitariam a completion do level)</p>
-                    <p>Não use uma versão mais facil/nerfada — só vale record no level original, sem modificação.</p>
                 </div>
             </div>
+
         </main>
     `,
     data: () => ({
@@ -155,6 +173,8 @@ export default {
         store,
         hoveredIndex: null,
         approvedSubmissions: {},
+        leftCollapsed: false,
+        rightCollapsed: true
     }),
     computed: {
         level() {
