@@ -23,7 +23,7 @@ export default {
                                     MODERADOR
                                 </span>
                             </div>
-                            <p style="color: #888; font-size: 0.9rem; margin-top: 4px;">{{ userEmail }}</p>
+                            <p style="color: #888; font-size: 0.9rem; margin-top: 4px;">{{ userHandle }}</p>
                         </div>
                     </div>
 
@@ -241,8 +241,11 @@ export default {
                    this.session?.user?.user_metadata?.avatar_url ||
                    'https://cdn.discordapp.com/embed/avatars/0.png';
         },
-        userEmail() {
-            return this.session?.user?.email || 'Login via Discord';
+        userHandle() {
+            if (this.session?.user?.app_metadata?.provider === 'discord') {
+                return 'Conectado via Discord';
+            }
+            return `@${this.currentDisplayName}`;
         },
         isDiscordLinked() {
             return Boolean(
