@@ -4,6 +4,7 @@ import { supabase } from './supabase.js';
 export const store = Vue.reactive({
     dark: JSON.parse(localStorage.getItem('dark')) || false,
     isMod: false,
+    profile: null,
     toggleDark() {
         this.dark = !this.dark;
         localStorage.setItem('dark', JSON.stringify(this.dark));
@@ -20,12 +21,14 @@ const app = Vue.createApp({
     }),
     computed: {
         username() {
-            return this.user?.user_metadata?.full_name || 
+            return store.profile?.display_name ||
+                   this.user?.user_metadata?.full_name || 
                    this.user?.user_metadata?.custom_claims?.global_name || 
                    'Usuário';
         },
         avatarUrl() {
-            return this.user?.user_metadata?.avatar_url || 
+            return store.profile?.avatar_url ||
+                   this.user?.user_metadata?.avatar_url || 
                    'https://cdn.discordapp.com/embed/avatars/0.png';
         },
         isMod() {
@@ -38,6 +41,7 @@ const app = Vue.createApp({
         if (session) {
             store.isMod = await this.checkIsMod(session);
         }
+        this.loadProfile(session);
 
         supabase.auth.onAuthStateChange(async (_event, session) => {
             this.user = session?.user || null;
@@ -47,9 +51,24 @@ const app = Vue.createApp({
                 store.isMod = false;
                 sessionStorage.removeItem('is_mod');
             }
+            // setTimeout evita travar o supabase-js ao chamá-lo de dentro deste callback
+            setTimeout(() => this.loadProfile(session), 0);
         });
     },
     methods: {
+        async loadProfile(session) {
+            if (!session) {
+                store.profile = null;
+                return;
+            }
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('user_id', session.user.id)
+                .maybeSingle();
+            if (error) console.error('Erro ao carregar perfil:', error.message);
+            store.profile = data || null;
+        },
         async checkIsMod(session) {
             const providerToken = session?.provider_token;
             if (!providerToken) return false;
@@ -89,6 +108,7 @@ const app = Vue.createApp({
         async logout() {
             await supabase.auth.signOut();
             this.user = null;
+            store.profile = null;
             store.isMod = false;
             sessionStorage.removeItem('is_mod');
         }
