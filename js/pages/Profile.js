@@ -1,45 +1,55 @@
 import { auth } from '../auth.js';
 import { supabase } from '../supabase.js';
 import { store } from '../main.js';
+import { fetchLeaderboard } from '../content.js';
+import { localize } from '../util.js';
 import Spinner from '../components/Spinner.js';
 
 export default {
     components: { Spinner },
     template: `
         <div style="min-height: 85vh; padding: 40px 20px; box-sizing: border-box; background: var(--bg, #18181b); color: #fff;">
-            <div style="max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 30px;">
+            <div style="max-width: 980px; margin: 0 auto; display: flex; flex-direction: column; gap: 28px;">
                 
                 <!-- CABEÇALHO DO PERFIL -->
-                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 30px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px;">
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 28px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px;">
                     <div style="display: flex; align-items: center; gap: 20px;">
                         <img 
                             :src="currentAvatar" 
                             alt="Avatar" 
-                            style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #5865F2;"
+                            style="width: 82px; height: 82px; border-radius: 50%; object-fit: cover; border: 3px solid #5865F2; background: #27272a;"
                         />
                         <div>
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <h1 style="font-size: 1.8rem; font-weight: bold; margin: 0;">{{ currentDisplayName }}</h1>
+                            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                                <h1 style="font-size: 1.85rem; font-weight: bold; margin: 0;">{{ currentDisplayName }}</h1>
                                 <span v-if="store.isMod" style="background: #ff4757; color: #fff; font-size: 0.75rem; padding: 3px 8px; border-radius: 4px; font-weight: bold;">
                                     MODERADOR
                                 </span>
+                                <span v-if="officialStats" style="background: rgba(88, 101, 242, 0.2); border: 1px solid #5865F2; color: #a5b4fc; font-size: 0.75rem; padding: 3px 8px; border-radius: 4px; font-weight: bold;">
+                                    #{{ officialStats.rank }} NO RANKING ({{ localize(officialStats.total) }} pts)
+                                </span>
                             </div>
-                            <p style="color: #888; font-size: 0.9rem; margin-top: 4px;">{{ userHandle }}</p>
+                            <p style="color: #888; font-size: 0.9rem; margin-top: 4px; margin-bottom: 0;">
+                                {{ userHandle }}
+                                <span v-if="account?.discord_username" style="margin-left: 10px; color: #818cf8;">
+                                    • Discord: @{{ account.discord_username }}
+                                </span>
+                            </p>
                         </div>
                     </div>
 
                     <button 
                         @click="handleLogout" 
-                        style="background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #ccc; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; font-weight: bold;"
+                        style="background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #ccc; padding: 8px 18px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; font-weight: bold; transition: all 0.2s;"
                     >
                         Sair da Conta
                     </button>
                 </div>
 
                 <!-- ALERTA DE SENHA TEMPORÁRIA PENDENTE -->
-                <div v-if="hasTempPassword" style="background: rgba(234, 179, 8, 0.15); border: 1px solid #eab308; color: #fef08a; padding: 14px 18px; border-radius: 8px; font-size: 0.95rem; line-height: 1.5;">
-                    ⚠️ <strong>Você está usando uma senha provisória de migração!</strong><br>
-                    Por favor, defina uma nova senha pessoal abaixo para manter sua conta segura.
+                <div v-if="hasTempPassword" style="background: rgba(234, 179, 8, 0.15); border: 1px solid #eab308; color: #fef08a; padding: 16px 20px; border-radius: 10px; font-size: 0.95rem; line-height: 1.5;">
+                    ⚠️ <strong>Você está usando a senha provisória de migração!</strong><br>
+                    Por favor, altere sua senha no bloco <strong>Segurança da Conta</strong> abaixo para manter sua conta protegida.
                 </div>
 
                 <!-- ALERTA DE SUCESSO / ERRO -->
@@ -47,19 +57,22 @@ export default {
                     background: feedback.type === 'success' ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
                     border: '1px solid ' + (feedback.type === 'success' ? '#22c55e' : '#ef4444'),
                     color: feedback.type === 'success' ? '#86efac' : '#fca5a5',
-                    padding: '12px 16px',
+                    padding: '12px 18px',
                     borderRadius: '8px',
                     fontSize: '0.95rem'
                 }">
                     {{ feedback.text }}
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px;">
+                <!-- CARDS DE CONFIGURAÇÃO DO PERFIL -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
                     
-                    <!-- EDIÇÃO DE DADOS (NOME E FOTO) -->
+                    <!-- 1. EDIÇÃO DE DADOS (NICK E FOTO) -->
                     <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 24px; display: flex; flex-direction: column; gap: 16px;">
-                        <h2 style="font-size: 1.3rem; font-weight: bold; margin: 0;">Editar Perfil</h2>
-                        <p style="color: #888; font-size: 0.85rem; margin: 0;">Atualize seu nome de jogador e foto de perfil.</p>
+                        <div>
+                            <h2 style="font-size: 1.25rem; font-weight: bold; margin: 0;">Editar Perfil</h2>
+                            <p style="color: #888; font-size: 0.85rem; margin-top: 4px; margin-bottom: 0;">Atualize seu nome de exibição e foto de perfil.</p>
+                        </div>
 
                         <form @submit.prevent="saveProfile" style="display: flex; flex-direction: column; gap: 14px;">
                             <div>
@@ -73,7 +86,7 @@ export default {
                             </div>
 
                             <div>
-                                <label style="display: block; font-size: 0.85rem; color: #aaa; margin-bottom: 6px;">Link da Imagem (Avatar URL):</label>
+                                <label style="display: block; font-size: 0.85rem; color: #aaa; margin-bottom: 6px;">Link da Foto (Avatar URL):</label>
                                 <input 
                                     type="url" 
                                     v-model="form.avatar_url" 
@@ -85,60 +98,104 @@ export default {
                             <button 
                                 type="submit" 
                                 :disabled="savingProfile" 
-                                style="background: #3b82f6; color: #fff; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 6px;"
+                                style="background: #3b82f6; color: #fff; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 4px;"
                             >
                                 {{ savingProfile ? 'Salvando...' : 'Salvar Perfil' }}
                             </button>
                         </form>
                     </div>
 
-                    <!-- VINCULAR DISCORD E NOTIFICAÇÕES -->
-                    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 24px; display: flex; flex-direction: column; justify-content: space-between; gap: 16px;">
+                    <!-- 2. CONEXÃO DISCORD -->
+                    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 24px; display: flex; flex-direction: column; gap: 14px;">
                         <div>
-                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
-                                <img src="/assets/discord.svg" style="width: 24px; height: 24px;" alt="Discord">
-                                <h2 style="font-size: 1.3rem; font-weight: bold; margin: 0;">Conexão Discord</h2>
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                <img src="/assets/discord.svg" style="width: 22px; height: 22px;" alt="Discord">
+                                <h2 style="font-size: 1.25rem; font-weight: bold; margin: 0;">Conexão Discord</h2>
                             </div>
-                            <p style="color: #888; font-size: 0.85rem; line-height: 1.5;">
-                                Conecte seu Discord para receber notificações na sua <strong>DM do Discord</strong> pelo bot quando o seu recorde for aprovado ou recusado pela moderação.
+                            <p style="color: #888; font-size: 0.85rem; line-height: 1.4; margin-top: 4px; margin-bottom: 0;">
+                                O bot avisará na sua <strong>DM do Discord</strong> quando seu recorde for aprovado ou recusado pela moderação.
                             </p>
+                        </div>
 
-                            <div style="margin-top: 16px; padding: 14px; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                                    <span style="font-size: 0.85rem; color: #aaa;">Status:</span>
-                                    <span :style="{
-                                        color: isDiscordLinked ? '#22c55e' : '#f59e0b',
-                                        fontWeight: 'bold',
-                                        fontSize: '0.85rem'
-                                    }">
-                                        {{ isDiscordLinked ? '● Conectado' : '○ Não conectado' }}
-                                    </span>
-                                </div>
-                                <div v-if="discordUsername" style="font-size: 0.85rem; color: #ccc;">
-                                    Usuário: <strong>{{ discordUsername }}</strong>
-                                </div>
-                                <div v-if="discordId" style="font-size: 0.75rem; color: #666; margin-top: 2px;">
-                                    ID: {{ discordId }}
-                                </div>
+                        <!-- STATUS DA CONEXÃO -->
+                        <div style="padding: 12px; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-size: 0.85rem; color: #aaa;">Status:</span>
+                                <span :style="{
+                                    color: isDiscordLinked ? '#22c55e' : '#f59e0b',
+                                    fontWeight: 'bold',
+                                    fontSize: '0.85rem'
+                                }">
+                                    {{ isDiscordLinked ? '● Conectado' : '○ Não conectado' }}
+                                </span>
+                            </div>
+                            <div v-if="account?.discord_username" style="font-size: 0.85rem; color: #e2e8f0; margin-top: 6px;">
+                                Tag / Usuário: <strong>{{ account.discord_username }}</strong>
+                            </div>
+                            <div v-if="account?.discord_id" style="font-size: 0.75rem; color: #94a3b8; margin-top: 2px;">
+                                ID Discord: {{ account.discord_id }}
                             </div>
                         </div>
 
+                        <!-- FORMULÁRIO DE VÍNCULO MANUAL / DIRETO -->
+                        <form @submit.prevent="saveDiscordManual" style="display: flex; flex-direction: column; gap: 10px;">
+                            <div>
+                                <label style="display: block; font-size: 0.8rem; color: #aaa; margin-bottom: 4px;">
+                                    Seu Usuário no Discord:
+                                </label>
+                                <input 
+                                    type="text" 
+                                    v-model="form.discord_username" 
+                                    placeholder="Ex: sophiz ou sophiz#0000" 
+                                    style="width: 100%; box-sizing: border-box; background: #27272a; border: 1px solid #3f3f46; color: #fff; padding: 8px 10px; border-radius: 6px; font-size: 0.85rem;"
+                                />
+                            </div>
+
+                            <div>
+                                <label style="display: block; font-size: 0.8rem; color: #aaa; margin-bottom: 4px;">
+                                    ID do Discord (Snowflake):
+                                </label>
+                                <input 
+                                    type="text" 
+                                    v-model="form.discord_id" 
+                                    placeholder="Ex: 849201948291049281" 
+                                    style="width: 100%; box-sizing: border-box; background: #27272a; border: 1px solid #3f3f46; color: #fff; padding: 8px 10px; border-radius: 6px; font-size: 0.85rem;"
+                                />
+                                <span style="font-size: 0.72rem; color: #71717a; margin-top: 2px; display: block;">
+                                    (Ative o Modo Desenvolvedor no Discord e clique com botão direito no seu perfil -> Copiar ID)
+                                </span>
+                            </div>
+
+                            <button 
+                                type="submit" 
+                                :disabled="savingDiscord" 
+                                style="background: #10b981; color: #fff; border: none; padding: 8px; border-radius: 6px; font-weight: bold; font-size: 0.85rem; cursor: pointer;"
+                            >
+                                {{ savingDiscord ? 'Salvando...' : 'Salvar Dados do Discord' }}
+                            </button>
+                        </form>
+
+                        <div style="text-align: center; font-size: 0.75rem; color: #666; margin: 2px 0;">OU</div>
+
+                        <!-- BOTÃO OAUTH VIA POP-UP -->
                         <button 
-                            @click="linkDiscord" 
+                            @click="linkDiscordOAuth" 
                             type="button" 
-                            style="background: #5865F2; color: #fff; border: none; padding: 10px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;"
+                            style="background: #5865F2; color: #fff; border: none; padding: 9px 14px; border-radius: 6px; font-weight: bold; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;"
                         >
-                            <img src="/assets/discord.svg" style="width: 18px; height: 18px;" alt="">
-                            {{ isDiscordLinked ? 'Reconectar / Atualizar Discord' : 'Vincular com Discord' }}
+                            <img src="/assets/discord.svg" style="width: 16px; height: 16px;" alt="">
+                            Vincular via Pop-up do Discord
                         </button>
                     </div>
 
-                    <!-- ALTERAÇÃO DE SENHA -->
+                    <!-- 3. ALTERAÇÃO DE SENHA -->
                     <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 24px; display: flex; flex-direction: column; gap: 16px;">
-                        <h2 style="font-size: 1.3rem; font-weight: bold; margin: 0;">Segurança da Conta</h2>
-                        <p style="color: #888; font-size: 0.85rem; margin: 0;">
-                            Altere sua senha de acesso a qualquer momento.
-                        </p>
+                        <div>
+                            <h2 style="font-size: 1.25rem; font-weight: bold; margin: 0;">Segurança da Conta</h2>
+                            <p style="color: #888; font-size: 0.85rem; margin-top: 4px; margin-bottom: 0;">
+                                Altere sua senha para proteger seu acesso.
+                            </p>
+                        </div>
 
                         <form @submit.prevent="changePassword" style="display: flex; flex-direction: column; gap: 14px;">
                             <div>
@@ -156,64 +213,261 @@ export default {
                             <button 
                                 type="submit" 
                                 :disabled="savingPassword" 
-                                style="background: #10b981; color: #fff; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer;"
+                                style="background: #3b82f6; color: #fff; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer;"
                             >
-                                {{ savingPassword ? 'Atualizando...' : 'Atualizar Senha' }}
+                                {{ savingPassword ? 'Atualizando...' : 'Definir Nova Senha' }}
                             </button>
                         </form>
                     </div>
 
                 </div>
 
-                <!-- SEÇÃO MEUS RECORDES SUBMETIDOS -->
-                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 24px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <!-- SEÇÃO CENTRAL: RECORDES E PROGRESSOS -->
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 26px;">
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 20px;">
                         <div>
-                            <h2 style="font-size: 1.3rem; font-weight: bold; margin: 0;">Meus Recordes Enviados</h2>
-                            <p style="color: #888; font-size: 0.85rem; margin-top: 4px;">Histórico de envios vinculados ao seu nick.</p>
+                            <h2 style="font-size: 1.4rem; font-weight: bold; margin: 0;">Meus Recordes & Envios</h2>
+                            <p style="color: #888; font-size: 0.85rem; margin-top: 4px; margin-bottom: 0;">
+                                Conquistas registradas na lista e submissões enviadas para moderação.
+                            </p>
                         </div>
-                        <router-link to="/submit" style="background: #5865F2; color: #fff; text-decoration: none; padding: 8px 14px; border-radius: 6px; font-size: 0.85rem; font-weight: bold;">
-                            + Novo Recorde
-                        </router-link>
+
+                        <!-- ABAS DE NAVEGAÇÃO DOS RECORDES -->
+                        <div style="display: flex; gap: 8px; background: rgba(0,0,0,0.3); padding: 4px; border-radius: 8px;">
+                            <button 
+                                @click="activeTab = 'official'" 
+                                :style="{
+                                    background: activeTab === 'official' ? '#5865F2' : 'transparent',
+                                    color: activeTab === 'official' ? '#fff' : '#aaa',
+                                    border: 'none',
+                                    padding: '8px 14px',
+                                    borderRadius: '6px',
+                                    fontWeight: 'bold',
+                                    fontSize: '0.85rem',
+                                    cursor: 'pointer'
+                                }"
+                            >
+                                Recordes na Lista ({{ totalOfficialRecords }})
+                            </button>
+                            <button 
+                                @click="activeTab = 'submissions'" 
+                                :style="{
+                                    background: activeTab === 'submissions' ? '#5865F2' : 'transparent',
+                                    color: activeTab === 'submissions' ? '#fff' : '#aaa',
+                                    border: 'none',
+                                    padding: '8px 14px',
+                                    borderRadius: '6px',
+                                    fontWeight: 'bold',
+                                    fontSize: '0.85rem',
+                                    cursor: 'pointer'
+                                }"
+                            >
+                                Submissões Recentes ({{ userSubmissions.length }})
+                            </button>
+                            <router-link to="/submit" style="background: rgba(255,255,255,0.1); color: #fff; text-decoration: none; padding: 8px 14px; border-radius: 6px; font-size: 0.85rem; font-weight: bold; display: flex; align-items: center;">
+                                + Enviar Novo
+                            </router-link>
+                        </div>
                     </div>
 
-                    <div v-if="loadingRecords" style="text-align: center; padding: 20px;">
+                    <!-- LOADING -->
+                    <div v-if="loadingRecords" style="text-align: center; padding: 40px;">
                         <Spinner></Spinner>
+                        <p style="color: #aaa; margin-top: 10px;">Carregando recordes do jogador...</p>
                     </div>
 
-                    <div v-else-if="userSubmissions.length === 0" style="text-align: center; padding: 30px; color: #777;">
-                        Nenhum recorde enviado até o momento.
-                    </div>
+                    <!-- CONTEÚDO DA ABA 1: RECORDES OFICIAIS NA LISTA -->
+                    <div v-else-if="activeTab === 'official'">
+                        
+                        <!-- RESUMO DE PONTUAÇÃO -->
+                        <div v-if="officialStats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;">
+                            <div style="background: rgba(88, 101, 242, 0.1); border: 1px solid rgba(88, 101, 242, 0.3); border-radius: 10px; padding: 16px;">
+                                <div style="color: #a5b4fc; font-size: 0.85rem; text-transform: uppercase; font-weight: bold;">Posição no Rank</div>
+                                <div style="font-size: 1.8rem; font-weight: bold; margin-top: 4px; color: #fff;">#{{ officialStats.rank }}</div>
+                            </div>
+                            <div style="background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 10px; padding: 16px;">
+                                <div style="color: #86efac; font-size: 0.85rem; text-transform: uppercase; font-weight: bold;">Pontos Totais</div>
+                                <div style="font-size: 1.8rem; font-weight: bold; margin-top: 4px; color: #fff;">{{ localize(officialStats.total) }} pts</div>
+                            </div>
+                            <div style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 10px; padding: 16px;">
+                                <div style="color: #7dd3fc; font-size: 0.85rem; text-transform: uppercase; font-weight: bold;">Níveis Concluídos</div>
+                                <div style="font-size: 1.8rem; font-weight: bold; margin-top: 4px; color: #fff;">{{ officialStats.completed?.length || 0 }}</div>
+                            </div>
+                        </div>
 
-                    <div v-else style="display: flex; flex-direction: column; gap: 10px;">
-                        <div 
-                            v-for="sub in userSubmissions" 
-                            :key="sub.id" 
-                            style="display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; background: rgba(0,0,0,0.25); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);"
-                        >
-                            <div>
-                                <span style="font-weight: bold; font-size: 1.05rem;">{{ sub.level_name || ('Nível #' + sub.level_id) }}</span>
-                                <span style="margin-left: 10px; color: #38bdf8; font-weight: bold;">{{ sub.percent }}%</span>
-                                <div style="font-size: 0.8rem; color: #888; margin-top: 4px;">
-                                    {{ sub.hz }}Hz · {{ sub.mobile ? 'Mobile' : 'PC' }} · 
-                                    <a :href="sub.video_link" target="_blank" style="color: #5865F2;">Vídeo</a>
+                        <!-- SE NÃO TIVER NENHUM RECORDE OFICIAL -->
+                        <div v-if="totalOfficialRecords === 0" style="text-align: center; padding: 40px 20px; background: rgba(0,0,0,0.2); border-radius: 10px; border: 1px dashed rgba(255,255,255,0.1);">
+                            <p style="color: #aaa; font-size: 1rem; margin-bottom: 12px;">
+                                Nenhum recorde oficial encontrado na leaderboard para o jogador <strong>{{ currentDisplayName }}</strong>.
+                            </p>
+                            <p style="color: #666; font-size: 0.85rem; margin-bottom: 20px;">
+                                Se você completou algum nível da lista, envie seu recorde com o vídeo de comprovação!
+                            </p>
+                            <router-link to="/submit" style="background: #5865F2; color: #fff; text-decoration: none; padding: 10px 18px; border-radius: 6px; font-weight: bold; font-size: 0.9rem;">
+                                Submeter Meu Primeiro Recorde
+                            </router-link>
+                        </div>
+
+                        <!-- LISTAGEM DOS RECORDES OFICIAIS -->
+                        <div v-else style="display: flex; flex-direction: column; gap: 20px;">
+                            
+                            <!-- COMPLETED (100%) -->
+                            <div v-if="officialStats?.completed && officialStats.completed.length > 0">
+                                <h3 style="font-size: 1.15rem; font-weight: bold; color: #4ade80; margin-top: 0; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                                    <span>✓</span> Níveis Concluídos ({{ officialStats.completed.length }})
+                                </h3>
+                                <div style="display: flex; flex-direction: column; gap: 10px;">
+                                    <div 
+                                        v-for="rec in officialStats.completed" 
+                                        :key="rec.level" 
+                                        style="display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; background: rgba(0,0,0,0.25); border-radius: 8px; border: 1px solid rgba(255,255,255,0.06); flex-wrap: wrap; gap: 12px;"
+                                    >
+                                        <div style="display: flex; align-items: center; gap: 14px;">
+                                            <span style="background: rgba(255,255,255,0.08); color: #aaa; font-weight: bold; padding: 4px 10px; border-radius: 6px; font-size: 0.85rem;">
+                                                #{{ rec.rank }}
+                                            </span>
+                                            <div>
+                                                <a 
+                                                    :href="rec.link" 
+                                                    target="_blank" 
+                                                    style="font-size: 1.05rem; font-weight: bold; color: #fff; text-decoration: none; transition: color 0.2s;"
+                                                    onmouseover="this.style.color='#38bdf8'" 
+                                                    onmouseout="this.style.color='#fff'"
+                                                >
+                                                    {{ rec.level }} ↗
+                                                </a>
+                                                <span style="color: #4ade80; font-weight: bold; margin-left: 8px; font-size: 0.9rem;">100%</span>
+                                            </div>
+                                        </div>
+
+                                        <div style="display: flex; align-items: center; gap: 16px;">
+                                            <span style="color: #a5b4fc; font-weight: bold; font-size: 0.95rem;">
+                                                +{{ localize(rec.score) }} pts
+                                            </span>
+                                            <a 
+                                                :href="rec.link" 
+                                                target="_blank" 
+                                                style="background: rgba(88, 101, 242, 0.15); color: #818cf8; text-decoration: none; padding: 5px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: bold;"
+                                            >
+                                                Vídeo Prova
+                                            </a>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div>
-                                <span :style="{
-                                    padding: '4px 10px',
-                                    borderRadius: '4px',
-                                    fontSize: '0.8rem',
-                                    fontWeight: 'bold',
-                                    background: sub.status === 'approved' ? 'rgba(34, 197, 94, 0.2)' : (sub.status === 'rejected' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(234, 179, 8, 0.2)'),
-                                    color: sub.status === 'approved' ? '#4ade80' : (sub.status === 'rejected' ? '#f87171' : '#facc15')
-                                }">
-                                    {{ sub.status === 'approved' ? 'Aprovado' : (sub.status === 'rejected' ? 'Recusado' : 'Pendente') }}
-                                </span>
+                            <!-- VERIFIED -->
+                            <div v-if="officialStats?.verified && officialStats.verified.length > 0">
+                                <h3 style="font-size: 1.15rem; font-weight: bold; color: #38bdf8; margin-top: 10px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                                    <span>★</span> Níveis Verificados ({{ officialStats.verified.length }})
+                                </h3>
+                                <div style="display: flex; flex-direction: column; gap: 10px;">
+                                    <div 
+                                        v-for="rec in officialStats.verified" 
+                                        :key="rec.level" 
+                                        style="display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; background: rgba(0,0,0,0.25); border-radius: 8px; border: 1px solid rgba(255,255,255,0.06); flex-wrap: wrap; gap: 12px;"
+                                    >
+                                        <div style="display: flex; align-items: center; gap: 14px;">
+                                            <span style="background: rgba(255,255,255,0.08); color: #aaa; font-weight: bold; padding: 4px 10px; border-radius: 6px; font-size: 0.85rem;">
+                                                #{{ rec.rank }}
+                                            </span>
+                                            <div>
+                                                <a :href="rec.link" target="_blank" style="font-size: 1.05rem; font-weight: bold; color: #fff; text-decoration: none;">
+                                                    {{ rec.level }} ↗
+                                                </a>
+                                                <span style="color: #38bdf8; font-weight: bold; margin-left: 8px; font-size: 0.85rem;">Verificador</span>
+                                            </div>
+                                        </div>
+                                        <div style="display: flex; align-items: center; gap: 16px;">
+                                            <span style="color: #a5b4fc; font-weight: bold; font-size: 0.95rem;">
+                                                +{{ localize(rec.score) }} pts
+                                            </span>
+                                            <a :href="rec.link" target="_blank" style="background: rgba(88, 101, 242, 0.15); color: #818cf8; text-decoration: none; padding: 5px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: bold;">
+                                                Verificação
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- PROGRESSED (<100%) -->
+                            <div v-if="officialStats?.progressed && officialStats.progressed.length > 0">
+                                <h3 style="font-size: 1.15rem; font-weight: bold; color: #facc15; margin-top: 10px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                                    <span>▲</span> Progresso Qualificado ({{ officialStats.progressed.length }})
+                                </h3>
+                                <div style="display: flex; flex-direction: column; gap: 10px;">
+                                    <div 
+                                        v-for="rec in officialStats.progressed" 
+                                        :key="rec.level" 
+                                        style="display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; background: rgba(0,0,0,0.25); border-radius: 8px; border: 1px solid rgba(255,255,255,0.06); flex-wrap: wrap; gap: 12px;"
+                                    >
+                                        <div style="display: flex; align-items: center; gap: 14px;">
+                                            <span style="background: rgba(255,255,255,0.08); color: #aaa; font-weight: bold; padding: 4px 10px; border-radius: 6px; font-size: 0.85rem;">
+                                                #{{ rec.rank }}
+                                            </span>
+                                            <div>
+                                                <a :href="rec.link" target="_blank" style="font-size: 1.05rem; font-weight: bold; color: #fff; text-decoration: none;">
+                                                    {{ rec.level }} ↗
+                                                </a>
+                                                <span style="color: #facc15; font-weight: bold; margin-left: 8px; font-size: 0.9rem;">{{ rec.percent }}%</span>
+                                            </div>
+                                        </div>
+                                        <div style="display: flex; align-items: center; gap: 16px;">
+                                            <span style="color: #a5b4fc; font-weight: bold; font-size: 0.95rem;">
+                                                +{{ localize(rec.score) }} pts
+                                            </span>
+                                            <a :href="rec.link" target="_blank" style="background: rgba(88, 101, 242, 0.15); color: #818cf8; text-decoration: none; padding: 5px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: bold;">
+                                                Vídeo
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- CONTEÚDO DA ABA 2: SUBMISSÕES RECENTES (MODERAÇÃO) -->
+                    <div v-else-if="activeTab === 'submissions'">
+                        <div v-if="userSubmissions.length === 0" style="text-align: center; padding: 40px 20px; background: rgba(0,0,0,0.2); border-radius: 10px; border: 1px dashed rgba(255,255,255,0.1);">
+                            <p style="color: #aaa; margin-bottom: 12px;">Nenhuma submissão enviada recentemente pelo formulário.</p>
+                            <router-link to="/submit" style="background: #5865F2; color: #fff; text-decoration: none; padding: 8px 16px; border-radius: 6px; font-size: 0.85rem; font-weight: bold;">
+                                + Enviar Novo Recorde
+                            </router-link>
+                        </div>
+
+                        <div v-else style="display: flex; flex-direction: column; gap: 10px;">
+                            <div 
+                                v-for="sub in userSubmissions" 
+                                :key="sub.id" 
+                                style="display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; background: rgba(0,0,0,0.25); border-radius: 8px; border: 1px solid rgba(255,255,255,0.06); flex-wrap: wrap; gap: 12px;"
+                            >
+                                <div>
+                                    <span style="font-weight: bold; font-size: 1.05rem;">{{ sub.level_name || ('Nível #' + sub.level_id) }}</span>
+                                    <span style="margin-left: 10px; color: #38bdf8; font-weight: bold;">{{ sub.percent }}%</span>
+                                    <div style="font-size: 0.8rem; color: #888; margin-top: 4px;">
+                                        {{ sub.hz }}Hz · {{ sub.mobile ? 'Mobile' : 'PC' }} · 
+                                        <a :href="sub.video_link" target="_blank" style="color: #5865F2;">Vídeo Prova</a>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <span :style="{
+                                        padding: '5px 12px',
+                                        borderRadius: '6px',
+                                        fontSize: '0.8rem',
+                                        fontWeight: 'bold',
+                                        background: sub.status === 'approved' ? 'rgba(34, 197, 94, 0.2)' : (sub.status === 'rejected' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(234, 179, 8, 0.2)'),
+                                        color: sub.status === 'approved' ? '#4ade80' : (sub.status === 'rejected' ? '#f87171' : '#facc15')
+                                    }">
+                                        {{ sub.status === 'approved' ? '✓ Aprovado' : (sub.status === 'rejected' ? '✕ Recusado' : '⏳ Em Análise') }}
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </div>
+
                 </div>
 
             </div>
@@ -226,13 +480,18 @@ export default {
             discordSession: null,
             form: {
                 display_name: '',
-                avatar_url: ''
+                avatar_url: '',
+                discord_username: '',
+                discord_id: ''
             },
             newPassword: '',
             savingProfile: false,
+            savingDiscord: false,
             savingPassword: false,
             loadingRecords: true,
+            officialStats: null,
             userSubmissions: [],
+            activeTab: 'official',
             feedback: { text: '', type: 'success' }
         };
     },
@@ -254,7 +513,7 @@ export default {
             if (this.account?.username) {
                 return `@${this.account.username}`;
             }
-            return 'Conectado via Discord';
+            return 'Conta TACL';
         },
         hasTempPassword() {
             return Boolean(this.account?.has_temp_password);
@@ -262,26 +521,22 @@ export default {
         isDiscordLinked() {
             return Boolean(
                 this.account?.discord_id ||
+                this.account?.discord_username ||
                 this.discordSession?.user?.app_metadata?.provider === 'discord'
             );
         },
-        discordUsername() {
-            return this.account?.discord_username ||
-                   this.discordSession?.user?.user_metadata?.custom_claims?.global_name ||
-                   this.discordSession?.user?.user_metadata?.full_name ||
-                   null;
-        },
-        discordId() {
-            return this.account?.discord_id ||
-                   this.discordSession?.user?.user_metadata?.sub ||
-                   null;
+        totalOfficialRecords() {
+            if (!this.officialStats) return 0;
+            return (this.officialStats.completed?.length || 0) +
+                   (this.officialStats.verified?.length || 0) +
+                   (this.officialStats.progressed?.length || 0);
         }
     },
     async mounted() {
-        // Checa conta do sistema TACL
+        // Escuta popup de autenticação Discord
+        window.addEventListener('message', this.handleOAuthMessage);
+
         const account = await auth.getProfile();
-        
-        // Checa sessão Discord no Supabase se houver
         const { data: { session } } = await supabase.auth.getSession();
         this.discordSession = session;
 
@@ -292,7 +547,7 @@ export default {
 
         this.account = account;
 
-        // Se tem conta logada e acabou de autorizar no Discord, vincula automaticamente
+        // Auto-vincula se o usuário voltou do Discord OAuth
         if (account && session?.user?.app_metadata?.provider === 'discord') {
             const discordId = session.user.user_metadata?.sub;
             const discordName = session.user.user_metadata?.custom_claims?.global_name || session.user.user_metadata?.full_name;
@@ -308,12 +563,73 @@ export default {
             }
         }
 
-        this.form.display_name = this.account?.display_name || session?.user?.user_metadata?.full_name || '';
+        this.form.display_name = this.account?.display_name || this.account?.username || session?.user?.user_metadata?.full_name || '';
         this.form.avatar_url = this.account?.avatar_url || session?.user?.user_metadata?.avatar_url || '';
+        this.form.discord_username = this.account?.discord_username || session?.user?.user_metadata?.custom_claims?.global_name || '';
+        this.form.discord_id = this.account?.discord_id || session?.user?.user_metadata?.sub || '';
 
-        await this.fetchMySubmissions();
+        await this.loadAllRecords();
+    },
+    beforeUnmount() {
+        window.removeEventListener('message', this.handleOAuthMessage);
     },
     methods: {
+        localize,
+        async handleOAuthMessage(event) {
+            if (event.data?.type === 'OAUTH_AUTH_SUCCESS') {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session) {
+                    this.discordSession = session;
+                    const discordId = session.user.user_metadata?.sub;
+                    const discordName = session.user.user_metadata?.custom_claims?.global_name || session.user.user_metadata?.full_name;
+                    const discordAvatar = session.user.user_metadata?.avatar_url;
+                    try {
+                        this.account = await auth.linkDiscord({
+                            discord_id: discordId,
+                            discord_username: discordName,
+                            discord_avatar: discordAvatar
+                        });
+                        this.form.discord_username = discordName;
+                        this.form.discord_id = discordId;
+                        this.feedback = { text: 'Discord vinculado com sucesso pelo pop-up!', type: 'success' };
+                    } catch (e) {
+                        console.error('Erro ao salvar vinculo do Discord:', e);
+                    }
+                }
+            }
+        },
+        async loadAllRecords() {
+            this.loadingRecords = true;
+            try {
+                // 1. Carrega recordes oficiais da leaderboard (dados estáticos /data/*.json)
+                const [leaderboard] = await fetchLeaderboard();
+                if (leaderboard) {
+                    const searchName = (this.account?.username || this.currentDisplayName || '').toLowerCase().trim();
+                    const found = leaderboard.find(entry => entry.user.toLowerCase().trim() === searchName);
+                    if (found) {
+                        const rank = leaderboard.findIndex(e => e.user.toLowerCase().trim() === searchName) + 1;
+                        this.officialStats = {
+                            rank,
+                            ...found
+                        };
+                    }
+                }
+
+                // 2. Carrega submissões recentes do Supabase
+                const nick = this.currentDisplayName;
+                const { data } = await supabase
+                    .from('submissions')
+                    .select('*')
+                    .eq('user_name', nick)
+                    .order('id', { ascending: false });
+
+                this.userSubmissions = data || [];
+            } catch (err) {
+                console.error('Erro ao buscar dados dos recordes:', err);
+            } finally {
+                this.loadingRecords = false;
+            }
+        },
         async saveProfile() {
             this.savingProfile = true;
             this.feedback = { text: '', type: 'success' };
@@ -327,11 +643,72 @@ export default {
                     this.account = updated;
                     store.profile = updated;
                 }
-                this.feedback = { text: 'Perfil salvo com sucesso!', type: 'success' };
+                this.feedback = { text: 'Perfil atualizado com sucesso!', type: 'success' };
+                await this.loadAllRecords();
             } catch (err) {
                 this.feedback = { text: 'Erro ao salvar perfil: ' + err.message, type: 'error' };
             } finally {
                 this.savingProfile = false;
+            }
+        },
+        async saveDiscordManual() {
+            if (!this.form.discord_username && !this.form.discord_id) {
+                this.feedback = { text: 'Preencha seu usuário ou ID do Discord para salvar.', type: 'error' };
+                return;
+            }
+
+            this.savingDiscord = true;
+            this.feedback = { text: '', type: 'success' };
+
+            try {
+                const updated = await auth.linkDiscord({
+                    discord_username: this.form.discord_username.trim(),
+                    discord_id: this.form.discord_id.trim()
+                });
+                this.account = updated;
+                store.profile = updated;
+                this.feedback = { text: 'Dados do Discord salvos com sucesso! O bot poderá notificar você na DM.', type: 'success' };
+            } catch (err) {
+                this.feedback = { text: 'Erro ao salvar Discord: ' + err.message, type: 'error' };
+            } finally {
+                this.savingDiscord = false;
+            }
+        },
+        async linkDiscordOAuth() {
+            this.feedback = { text: '', type: 'success' };
+            try {
+                const { data, error } = await supabase.auth.signInWithOAuth({
+                    provider: 'discord',
+                    options: {
+                        skipBrowserRedirect: true,
+                        scopes: 'identify guilds guilds.members.read',
+                        redirectTo: window.location.origin + '/auth/callback'
+                    }
+                });
+
+                if (error) {
+                    throw error;
+                }
+
+                if (data?.url) {
+                    const popup = window.open(data.url, 'discord_oauth_popup', 'width=600,height=750,menubar=no,toolbar=no');
+                    if (!popup) {
+                        this.feedback = {
+                            text: 'O pop-up foi bloqueado pelo seu navegador. Por favor, permita pop-ups ou informe seu usuário/ID do Discord no formulário ao lado.',
+                            type: 'error'
+                        };
+                    } else {
+                        this.feedback = {
+                            text: 'Janela do Discord aberta! Faça login e autorize para vincular.',
+                            type: 'success'
+                        };
+                    }
+                }
+            } catch (err) {
+                this.feedback = {
+                    text: 'Não foi possível iniciar o login automático do Discord (' + (err.message || err) + '). Você pode salvar seu Usuário e ID do Discord diretamente no formulário ao lado!',
+                    type: 'error'
+                };
             }
         },
         async changePassword() {
@@ -351,44 +728,12 @@ export default {
                     this.account = updated;
                     store.profile = updated;
                 }
-                this.feedback = { text: 'Senha alterada com sucesso!', type: 'success' };
+                this.feedback = { text: 'Senha alterada com sucesso! Senha provisória removida.', type: 'success' };
                 this.newPassword = '';
             } catch (err) {
                 this.feedback = { text: 'Erro ao trocar senha: ' + err.message, type: 'error' };
             } finally {
                 this.savingPassword = false;
-            }
-        },
-        async linkDiscord() {
-            try {
-                const { error } = await supabase.auth.signInWithOAuth({
-                    provider: 'discord',
-                    options: {
-                        scopes: 'identify guilds guilds.members.read',
-                        redirectTo: window.location.origin + window.location.pathname + '#/perfil'
-                    }
-                });
-                if (error) throw error;
-            } catch (err) {
-                this.feedback = { text: 'Erro ao conectar Discord: ' + err.message, type: 'error' };
-            }
-        },
-        async fetchMySubmissions() {
-            this.loadingRecords = true;
-            try {
-                const nick = this.currentDisplayName;
-                const { data, error } = await supabase
-                    .from('submissions')
-                    .select('*')
-                    .eq('user_name', nick)
-                    .order('id', { ascending: false });
-
-                if (error) throw error;
-                this.userSubmissions = data || [];
-            } catch (err) {
-                console.error('Erro ao buscar recordes do usuário:', err);
-            } finally {
-                this.loadingRecords = false;
             }
         },
         async handleLogout() {

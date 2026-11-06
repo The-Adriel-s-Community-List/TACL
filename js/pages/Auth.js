@@ -160,16 +160,35 @@ export default {
         },
         async loginWithDiscord() {
             try {
-                const { error } = await supabase.auth.signInWithOAuth({
+                this.error = '';
+                const { data, error } = await supabase.auth.signInWithOAuth({
                     provider: 'discord',
                     options: {
+                        skipBrowserRedirect: true,
                         scopes: 'identify guilds guilds.members.read',
-                        redirectTo: window.location.origin + window.location.pathname
+                        redirectTo: window.location.origin + '/auth/callback'
                     }
                 });
                 if (error) throw error;
-            } catch (err) {
-                this.error = 'Erro ao autenticar com o Discord: ' + err.message;
+                if (data?.url) {
+                    const popup = window.open(data.url, 'discord_auth_popup', 'width=600,height=750,menubar=no,toolbar=no');
+                    if (!popup) {
+                        this.error = 'O navegador bloqueou a janela pop-up do Discord. Permita pop-ups ou entre com usuário e senha.';
+                    } else {
+                        const messageHandler = async (event) => {
+                            if (event.data?.type === 'OAUTH_AUTH_SUCCESS') {
+                                window.removeEventListener('message', messageHandler);
+                                const { data: { session } } = await supabase.auth.getSession();
+                                if (session) {
+                                    this.$router.push('/perfil');
+                                }
+                            }
+                        };
+                        window.addEventListener('message', messageHandler);
+                    }
+                }
+            } catch (e) {
+                this.error = 'Erro ao autenticar com o Discord: ' + (e.message || e) + '. Use o login com Usuário e Senha!';
             }
         }
     }
