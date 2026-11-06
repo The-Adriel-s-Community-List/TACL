@@ -2,6 +2,14 @@ import { supabase } from '../supabase.js';
 import { store } from '../main.js';
 import Spinner from '../components/Spinner.js';
 
+function usernameToAuthEmail(input) {
+    if (!input) return '';
+    const trimmed = input.trim();
+    if (trimmed.includes('@')) return trimmed.toLowerCase();
+    const clean = trimmed.toLowerCase().replace(/[^a-z0-9_.-]/g, '');
+    return `${clean || 'user'}@tacl.player`;
+}
+
 export default {
     components: { Spinner },
     template: `
@@ -46,7 +54,7 @@ export default {
                     {{ tab === 'login' ? 'Acessar Conta' : 'Criar Nova Conta' }}
                 </h2>
                 <p style="color: #888; font-size: 0.9rem; margin-bottom: 20px;">
-                    {{ tab === 'login' ? 'Entre com seu e-mail ou via Discord para gerenciar seus recordes.' : 'Crie sua conta para registrar recordes e gerenciar seu perfil na lista.' }}
+                    {{ tab === 'login' ? 'Entre apenas com seu nome de usuário e senha.' : 'Escolha seu nome de usuário e sua senha para criar sua conta.' }}
                 </p>
 
                 <!-- MENSAGEM DE ERRO OU SUCESSO -->
@@ -57,10 +65,10 @@ export default {
                     {{ success }}
                 </div>
 
-                <!-- FORMULÁRIO EMAIL & SENHA -->
+                <!-- FORMULÁRIO USUÁRIO & SENHA -->
                 <form @submit.prevent="handleSubmit" style="display: flex; flex-direction: column; gap: 14px;">
-                    <div v-if="tab === 'register'">
-                        <label style="font-size: 0.85rem; color: #bbb; display: block; margin-bottom: 6px;">Nick / Nome de Jogador:</label>
+                    <div>
+                        <label style="font-size: 0.85rem; color: #bbb; display: block; margin-bottom: 6px;">Nome de Usuário (Nick):</label>
                         <input 
                             type="text" 
                             v-model="username" 
@@ -71,22 +79,12 @@ export default {
                     </div>
 
                     <div>
-                        <label style="font-size: 0.85rem; color: #bbb; display: block; margin-bottom: 6px;">E-mail:</label>
-                        <input 
-                            type="email" 
-                            v-model="email" 
-                            required 
-                            placeholder="seu@email.com" 
-                            style="width: 100%; box-sizing: border-box; background: #27272a; border: 1px solid #3f3f46; color: #fff; padding: 10px; border-radius: 6px;"
-                        />
-                    </div>
-
-                    <div>
                         <label style="font-size: 0.85rem; color: #bbb; display: block; margin-bottom: 6px;">Senha:</label>
                         <input 
                             type="password" 
                             v-model="password" 
                             required 
+                            minlength="6"
                             placeholder="Sua senha secreta" 
                             style="width: 100%; box-sizing: border-box; background: #27272a; border: 1px solid #3f3f46; color: #fff; padding: 10px; border-radius: 6px;"
                         />
@@ -125,9 +123,8 @@ export default {
     data() {
         return {
             tab: 'login',
-            email: '',
-            password: '',
             username: '',
+            password: '',
             loading: false,
             error: '',
             success: ''
@@ -135,44 +132,62 @@ export default {
     },
     methods: {
         async handleSubmit() {
+            if (!this.username.trim()) {
+                this.error = 'Por favor, informe seu nome de usuário.';
+                return;
+            }
+
             this.loading = true;
             this.error = '';
             this.success = '';
 
+            const authEmail = usernameToAuthEmail(this.username);
+
             try {
                 if (this.tab === 'login') {
                     const { data, error } = await supabase.auth.signInWithPassword({
-                        email: this.email,
+                        email: authEmail,
                         password: this.password,
                     });
-                    if (error) throw error;
+                    if (error) {
+                        // Mensagem amigável para usuário ou senha incorretos
+                        if (error.message.includes('Invalid login credentials')) {
+                            throw new Error('Usuário ou senha incorretos.');
+                        }
+                        throw error;
+                    }
                     this.success = 'Login realizado com sucesso! Redirecionando...';
                     setTimeout(() => {
                         this.$router.push('/perfil');
-                    }, 800);
+                    }, 600);
                 } else {
                     const { data, error } = await supabase.auth.signUp({
-                        email: this.email,
+                        email: authEmail,
                         password: this.password,
                         options: {
                             data: {
-                                full_name: this.username,
-                                display_name: this.username
+                                full_name: this.username.trim(),
+                                display_name: this.username.trim(),
+                                username: this.username.trim()
                             }
                         }
                     });
-                    if (error) throw error;
+                    if (error) {
+                        if (error.message.includes('already registered')) {
+                            throw new Error('Este nome de usuário já está em uso. Escolha outro.');
+                        }
+                        throw error;
+                    }
 
                     if (data?.user) {
-                        // Salvar na tabela profiles se disponível
                         await supabase.from('profiles').upsert({
                             user_id: data.user.id,
-                            display_name: this.username,
+                            display_name: this.username.trim(),
                             avatar_url: 'https://cdn.discordapp.com/embed/avatars/0.png'
                         });
                     }
 
-                    this.success = 'Conta criada com sucesso! Você já pode entrar.';
+                    this.success = 'Conta criada com sucesso! Faça login com seu usuário e senha.';
                     this.tab = 'login';
                 }
             } catch (err) {
