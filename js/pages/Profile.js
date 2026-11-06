@@ -1,3 +1,4 @@
+import { auth } from '../auth.js';
 import { supabase } from '../supabase.js';
 import { store } from '../main.js';
 import Spinner from '../components/Spinner.js';
@@ -35,6 +36,12 @@ export default {
                     </button>
                 </div>
 
+                <!-- ALERTA DE SENHA TEMPORÁRIA PENDENTE -->
+                <div v-if="hasTempPassword" style="background: rgba(234, 179, 8, 0.15); border: 1px solid #eab308; color: #fef08a; padding: 14px 18px; border-radius: 8px; font-size: 0.95rem; line-height: 1.5;">
+                    ⚠️ <strong>Você está usando uma senha provisória de migração!</strong><br>
+                    Por favor, defina uma nova senha pessoal abaixo para manter sua conta segura.
+                </div>
+
                 <!-- ALERTA DE SUCESSO / ERRO -->
                 <div v-if="feedback.text" :style="{
                     background: feedback.type === 'success' ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
@@ -52,7 +59,7 @@ export default {
                     <!-- EDIÇÃO DE DADOS (NOME E FOTO) -->
                     <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 24px; display: flex; flex-direction: column; gap: 16px;">
                         <h2 style="font-size: 1.3rem; font-weight: bold; margin: 0;">Editar Perfil</h2>
-                        <p style="color: #888; font-size: 0.85rem; margin: 0;">Atualize seu nome de jogador e link do avatar.</p>
+                        <p style="color: #888; font-size: 0.85rem; margin: 0;">Atualize seu nome de jogador e foto de perfil.</p>
 
                         <form @submit.prevent="saveProfile" style="display: flex; flex-direction: column; gap: 14px;">
                             <div>
@@ -130,7 +137,7 @@ export default {
                     <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 24px; display: flex; flex-direction: column; gap: 16px;">
                         <h2 style="font-size: 1.3rem; font-weight: bold; margin: 0;">Segurança da Conta</h2>
                         <p style="color: #888; font-size: 0.85rem; margin: 0;">
-                            Caso sua conta tenha sido criada com senha temporária pela moderação, troque-a aqui.
+                            Altere sua senha de acesso a qualquer momento.
                         </p>
 
                         <form @submit.prevent="changePassword" style="display: flex; flex-direction: column; gap: 14px;">
@@ -140,8 +147,8 @@ export default {
                                     type="password" 
                                     v-model="newPassword" 
                                     required 
-                                    minlength="6" 
-                                    placeholder="Mínimo 6 caracteres" 
+                                    minlength="4" 
+                                    placeholder="Mínimo 4 caracteres" 
                                     style="width: 100%; box-sizing: border-box; background: #27272a; border: 1px solid #3f3f46; color: #fff; padding: 10px; border-radius: 6px;"
                                 />
                             </div>
@@ -215,7 +222,8 @@ export default {
     data() {
         return {
             store,
-            session: null,
+            account: null,
+            discordSession: null,
             form: {
                 display_name: '',
                 avatar_url: ''
@@ -231,51 +239,77 @@ export default {
     computed: {
         currentDisplayName() {
             return this.form.display_name ||
-                   store.profile?.display_name ||
-                   this.session?.user?.user_metadata?.full_name ||
+                   this.account?.display_name ||
+                   this.account?.username ||
+                   this.discordSession?.user?.user_metadata?.full_name ||
                    'Jogador';
         },
         currentAvatar() {
             return this.form.avatar_url ||
-                   store.profile?.avatar_url ||
-                   this.session?.user?.user_metadata?.avatar_url ||
+                   this.account?.avatar_url ||
+                   this.discordSession?.user?.user_metadata?.avatar_url ||
                    'https://cdn.discordapp.com/embed/avatars/0.png';
         },
         userHandle() {
-            if (this.session?.user?.app_metadata?.provider === 'discord') {
-                return 'Conectado via Discord';
+            if (this.account?.username) {
+                return `@${this.account.username}`;
             }
-            return `@${this.currentDisplayName}`;
+            return 'Conectado via Discord';
+        },
+        hasTempPassword() {
+            return Boolean(this.account?.has_temp_password);
         },
         isDiscordLinked() {
             return Boolean(
-                this.session?.user?.app_metadata?.provider === 'discord' ||
-                this.session?.user?.identities?.some(i => i.provider === 'discord') ||
-                store.profile?.discord_id
+                this.account?.discord_id ||
+                this.discordSession?.user?.app_metadata?.provider === 'discord'
             );
         },
         discordUsername() {
-            return this.session?.user?.user_metadata?.custom_claims?.global_name ||
-                   this.session?.user?.user_metadata?.full_name ||
-                   store.profile?.discord_username ||
+            return this.account?.discord_username ||
+                   this.discordSession?.user?.user_metadata?.custom_claims?.global_name ||
+                   this.discordSession?.user?.user_metadata?.full_name ||
                    null;
         },
         discordId() {
-            return this.session?.user?.user_metadata?.sub ||
-                   store.profile?.discord_id ||
+            return this.account?.discord_id ||
+                   this.discordSession?.user?.user_metadata?.sub ||
                    null;
         }
     },
     async mounted() {
+        // Checa conta do sistema TACL
+        const account = await auth.getProfile();
+        
+        // Checa sessão Discord no Supabase se houver
         const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
+        this.discordSession = session;
+
+        if (!account && !session) {
             this.$router.push('/login');
             return;
         }
 
-        this.session = session;
-        this.form.display_name = store.profile?.display_name || session.user.user_metadata?.full_name || '';
-        this.form.avatar_url = store.profile?.avatar_url || session.user.user_metadata?.avatar_url || '';
+        this.account = account;
+
+        // Se tem conta logada e acabou de autorizar no Discord, vincula automaticamente
+        if (account && session?.user?.app_metadata?.provider === 'discord') {
+            const discordId = session.user.user_metadata?.sub;
+            const discordName = session.user.user_metadata?.custom_claims?.global_name || session.user.user_metadata?.full_name;
+            const discordAvatar = session.user.user_metadata?.avatar_url;
+            try {
+                this.account = await auth.linkDiscord({
+                    discord_id: discordId,
+                    discord_username: discordName,
+                    discord_avatar: discordAvatar
+                });
+            } catch (e) {
+                console.warn('Erro ao auto-vincular Discord:', e);
+            }
+        }
+
+        this.form.display_name = this.account?.display_name || session?.user?.user_metadata?.full_name || '';
+        this.form.avatar_url = this.account?.avatar_url || session?.user?.user_metadata?.avatar_url || '';
 
         await this.fetchMySubmissions();
     },
@@ -285,29 +319,14 @@ export default {
             this.feedback = { text: '', type: 'success' };
 
             try {
-                const updates = {
-                    user_id: this.session.user.id,
-                    display_name: this.form.display_name,
-                    avatar_url: this.form.avatar_url || 'https://cdn.discordapp.com/embed/avatars/0.png'
-                };
-
-                // Se houver discordId, salva junto para o bot usar nas DMs
-                if (this.discordId) {
-                    updates.discord_id = this.discordId;
+                if (this.account) {
+                    const updated = await auth.updateProfile({
+                        display_name: this.form.display_name,
+                        avatar_url: this.form.avatar_url
+                    });
+                    this.account = updated;
+                    store.profile = updated;
                 }
-                if (this.discordUsername) {
-                    updates.discord_username = this.discordUsername;
-                }
-
-                const { data, error } = await supabase
-                    .from('profiles')
-                    .upsert(updates)
-                    .select()
-                    .single();
-
-                if (error) throw error;
-
-                store.profile = data;
                 this.feedback = { text: 'Perfil salvo com sucesso!', type: 'success' };
             } catch (err) {
                 this.feedback = { text: 'Erro ao salvar perfil: ' + err.message, type: 'error' };
@@ -316,8 +335,8 @@ export default {
             }
         },
         async changePassword() {
-            if (!this.newPassword || this.newPassword.length < 6) {
-                this.feedback = { text: 'A senha deve ter pelo menos 6 caracteres.', type: 'error' };
+            if (!this.newPassword || this.newPassword.length < 4) {
+                this.feedback = { text: 'A senha deve ter pelo menos 4 caracteres.', type: 'error' };
                 return;
             }
 
@@ -325,12 +344,13 @@ export default {
             this.feedback = { text: '', type: 'success' };
 
             try {
-                const { error } = await supabase.auth.updateUser({
-                    password: this.newPassword
-                });
-
-                if (error) throw error;
-
+                if (this.account) {
+                    const updated = await auth.updateProfile({
+                        new_password: this.newPassword
+                    });
+                    this.account = updated;
+                    store.profile = updated;
+                }
                 this.feedback = { text: 'Senha alterada com sucesso!', type: 'success' };
                 this.newPassword = '';
             } catch (err) {
@@ -345,7 +365,7 @@ export default {
                     provider: 'discord',
                     options: {
                         scopes: 'identify guilds guilds.members.read',
-                        redirectTo: window.location.origin + window.location.pathname
+                        redirectTo: window.location.origin + window.location.pathname + '#/perfil'
                     }
                 });
                 if (error) throw error;
@@ -372,9 +392,11 @@ export default {
             }
         },
         async handleLogout() {
+            auth.logout();
             await supabase.auth.signOut();
             store.profile = null;
             store.isMod = false;
+            this.$root.user = null;
             this.$router.push('/');
         }
     }
