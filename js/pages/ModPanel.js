@@ -1,5 +1,5 @@
 import { supabase } from '../supabase.js';
-import { fetchLeaderboard } from '../content.js';
+import { auth } from '../auth.js';
 
 export default {
     template: `
@@ -42,7 +42,7 @@ export default {
                                 cursor: 'pointer'
                             }"
                         >
-                            Migração de Contas
+                            Migração de Contas ({{ leaderboardPlayers.length }})
                         </button>
                     </div>
                 </div>
@@ -103,9 +103,9 @@ export default {
                 <!-- ABA 2: GERADOR DE CONTAS DOS JOGADORES DA LEADERBOARD -->
                 <div v-else-if="tab === 'migration'">
                     <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 24px; margin-bottom: 24px;">
-                        <h2 style="font-size: 1.3rem; font-weight: bold; margin-top: 0; margin-bottom: 8px;">Migração dos Jogadores do Sistema Antigo</h2>
+                        <h2 style="font-size: 1.3rem; font-weight: bold; margin-top: 0; margin-bottom: 8px;">Contas Criadas para os Jogadores Antigos</h2>
                         <p style="color: #aaa; font-size: 0.9rem; line-height: 1.5; margin-bottom: 16px;">
-                            Aqui estão todos os jogadores identificados nos arquivos estáticos da Leaderboard. Você pode gerar a lista com login e senha temporária para passar aos jogadores no Discord. Quando eles entrarem na <strong>Área do Usuário (/perfil)</strong>, eles poderão alterar a senha e vincular o Discord deles!
+                            Todas as contas abaixo <strong>já foram provisionadas no sistema</strong> com as senhas provisórias indicadas! Basta copiar os dados e enviar a cada jogador no Discord. Ao fazer login, eles podem trocar a senha e vincular o Discord deles no perfil!
                         </p>
                         <div style="display: flex; gap: 12px; flex-wrap: wrap;">
                             <button 
@@ -118,32 +118,42 @@ export default {
                     </div>
 
                     <div v-if="loadingPlayers" style="text-align: center; padding: 30px;">
-                        Carregando jogadores da leaderboard...
+                        Carregando contas do servidor...
                     </div>
 
                     <div v-else style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px;">
                         <div 
-                            v-for="(p, index) in leaderboardPlayers" 
+                            v-for="p in leaderboardPlayers" 
                             :key="p.user" 
                             style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 8px;"
                         >
                             <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <strong style="font-size: 1.1rem; color: #fff;">#{{ index + 1 }} {{ p.user }}</strong>
-                                <span style="background: rgba(56, 189, 248, 0.2); color: #38bdf8; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold;">
-                                    {{ p.total }} pts
+                                <strong style="font-size: 1.1rem; color: #fff;">{{ p.display_name || p.user }}</strong>
+                                <span :style="{
+                                    background: p.has_changed_password ? 'rgba(34, 197, 94, 0.2)' : 'rgba(234, 179, 8, 0.2)',
+                                    color: p.has_changed_password ? '#4ade80' : '#facc15',
+                                    padding: '2px 8px',
+                                    borderRadius: '4px',
+                                    fontSize: '0.75rem',
+                                    fontWeight: 'bold'
+                                }">
+                                    {{ p.has_changed_password ? 'Senha alterada' : 'Senha temporária' }}
                                 </span>
                             </div>
                             
                             <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; font-size: 0.85rem; font-family: monospace;">
                                 <div style="color: #bbb;">Usuário: <span style="color: #fff; font-weight: bold;">{{ p.user }}</span></div>
-                                <div style="color: #bbb; margin-top: 4px;">Senha temp: <span style="color: #22c55e; font-weight: bold;">{{ getSuggestedPassword(p.user) }}</span></div>
+                                <div style="color: #bbb; margin-top: 4px;">Senha: <span style="color: #22c55e; font-weight: bold;">{{ p.temp_password || '*(Alterada pelo usuário)*' }}</span></div>
+                                <div style="color: #888; font-size: 0.75rem; margin-top: 4px;">
+                                    Discord: {{ p.discord_linked ? 'Conectado' : 'Não vinculado' }}
+                                </div>
                             </div>
 
                             <button 
                                 @click="copySingleAccount(p)" 
                                 style="background: rgba(255,255,255,0.1); color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: bold; align-self: flex-start; margin-top: 4px;"
                             >
-                                Copiar Dados de Acesso
+                                Copiar Mensagem para Envio
                             </button>
                         </div>
                     </div>
@@ -164,6 +174,7 @@ export default {
     },
     async mounted() {
         await this.fetchSubmissions();
+        await this.loadLeaderboardPlayers();
     },
     methods: {
         async fetchSubmissions() {
@@ -203,7 +214,6 @@ export default {
 
                 this.submissions = this.submissions.filter(s => s.id !== sub.id);
                 
-                // Disparo de notificação para o Discord bot se houver discord_id ou webhook configurado
                 await this.notifyDiscordBot(sub, newStatus);
 
                 this.showNotice(newStatus === 'approved' ? `Recorde de ${sub.user_name} aceito com sucesso!` : `Recorde de ${sub.user_name} recusado.`);
@@ -213,24 +223,17 @@ export default {
         },
         async notifyDiscordBot(sub, status) {
             try {
-                // Tenta achar o discord_id do usuário na tabela de profiles
-                const { data: profile } = await supabase
-                    .from('profiles')
-                    .select('discord_id, display_name')
-                    .eq('display_name', sub.user_name)
-                    .maybeSingle();
+                // Checa no banco de contas local se o jogador tem discord_id vinculado
+                const accounts = await auth.getMigrationAccounts();
+                const matched = accounts.find(a => a.user.toLowerCase() === sub.user_name.toLowerCase());
 
-                const discordId = profile?.discord_id || sub.discord_id;
-                
-                console.log(`[DISCORD NOTIFICATION] Status: ${status} | Jogador: ${sub.user_name} | Discord ID: ${discordId || 'Não vinculado'}`);
+                console.log(`[DISCORD NOTIFICAÇÃO] Recorde: ${status} | Jogador: ${sub.user_name} | Discord: ${matched?.discord_linked ? 'Vinculado' : 'Pendente'}`);
 
-                // Se houver endpoint ou webhook configurado, podemos disparar aqui
-                if (window.DISCORD_BOT_WEBHOOK_URL && discordId) {
+                if (window.DISCORD_BOT_WEBHOOK_URL) {
                     await fetch(window.DISCORD_BOT_WEBHOOK_URL, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            discord_id: discordId,
                             user_name: sub.user_name,
                             level_name: sub.level_name,
                             percent: sub.percent,
@@ -239,38 +242,29 @@ export default {
                     });
                 }
             } catch (e) {
-                console.warn('Não foi possível enviar webhook do Discord:', e);
+                console.warn('Erro na notificação do Discord:', e);
             }
         },
         async loadLeaderboardPlayers() {
-            if (this.leaderboardPlayers.length > 0) return;
             this.loadingPlayers = true;
             try {
-                const [players] = await fetchLeaderboard();
-                this.leaderboardPlayers = players || [];
+                const accounts = await auth.getMigrationAccounts();
+                this.leaderboardPlayers = accounts || [];
             } catch (e) {
-                console.error('Erro ao carregar leaderboard:', e);
+                console.error('Erro ao carregar contas de migração:', e);
             } finally {
                 this.loadingPlayers = false;
             }
         },
-        getSuggestedEmail(name) {
-            const clean = name.toLowerCase().replace(/[^a-z0-9]/g, '');
-            return `${clean || 'player'}@tacl.list`;
-        },
-        getSuggestedPassword(name) {
-            const clean = name.replace(/\s+/g, '');
-            return `TACL#${clean}2026`;
-        },
         copySingleAccount(p) {
-            const pass = this.getSuggestedPassword(p.user);
+            const pass = p.temp_password || '*(senha pessoal já definida pelo usuário)*';
             const text = `Sua conta na TACL foi criada!\nUsuário: ${p.user}\nSenha provisória: ${pass}\nAcesse e troque sua senha em: ${window.location.origin}/#/perfil`;
             navigator.clipboard.writeText(text);
             this.showNotice(`Dados de ${p.user} copiados para a área de transferência!`);
         },
         copyAllAccounts() {
             const lines = this.leaderboardPlayers.map(p => {
-                const pass = this.getSuggestedPassword(p.user);
+                const pass = p.temp_password || '*(já alterada)*';
                 return `${p.user} | ${pass}`;
             });
             const text = "USUÁRIO | SENHA PROVISÓRIA\n" + lines.join("\n");
