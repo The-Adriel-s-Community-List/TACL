@@ -58,6 +58,10 @@
                     <span class="type-label-lg">Mod Panel</span>
                 </router-link>
 
+                <router-link v-if="isMod" class="nav__tab" to="/mod/claims" style="color: #ff4757; font-weight: bold;">
+                    <span class="type-label-lg">Pedidos de perfil</span>
+                </router-link>
+
                 <div class="nav__actions" style="display: flex; align-items: center; gap: 10px;">
                     <button
                         class="nav__icon"
@@ -74,8 +78,8 @@
 
                     <!-- PERFIL DO DISCORD (LOGADO) -->
                     <div v-if="user" style="display: flex; align-items: center; gap: 8px;">
-                        <img :src="avatarUrl" style="width: 28px; height: 28px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.2);">
-                        <span class="type-label-lg" style="font-size: 0.85rem;">{{ username }}</span>
+                        <router-link to="/perfil" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: inherit;"><img :src="avatarUrl" style="width: 28px; height: 28px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.2);">
+                        <span class="type-label-lg" style="font-size: 0.85rem;">{{ username }}</span></router-link>
                         <button @click="logout" style="background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #ccc; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">Sair</button>
                     </div>
 
