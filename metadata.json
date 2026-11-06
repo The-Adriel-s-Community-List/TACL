@@ -1,0 +1,8 @@
+{
+  "name": "The Adriel's Community List (TACL)",
+  "description": "Community demon list for Geometry Dash featuring ranked levels, player and creator leaderboards, submissions, and roulette.",
+  "permissions": [],
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
