@@ -315,40 +315,35 @@ html, body, #app, .page-list-wrapper {
 .right-col .panel-toggle-btn {
     align-self: flex-end;
 }
-/* Limita a altura da lista de níveis à altura da tela e ativa o scroll próprio */
+/* Força o container da lista a ter scroll próprio, fixando a altura na tela */
 .list-container {
-    max-height: calc(100vh - 120px);
-    overflow-y: auto;
-    overflow-x: hidden;
-    padding-right: 5px;
+    max-height: calc(100vh - 100px) !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding-right: 4px !important;
 }
 
-/* Estilo moderno e minimalista para a scrollbar (compatível com Chrome, Edge, Safari e Firefox) */
-
-/* Para navegadores baseados em WebKit (Chrome, Edge, Safari) */
+/* Estilo moderno e minimalista para a scrollbar (Chrome, Edge, Safari) */
 .list-container::-webkit-scrollbar {
-    width: 6px;
+    width: 6px !important;
 }
 
 .list-container::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.1);
-    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.15) !important;
+    border-radius: 10px !important;
 }
 
 .list-container::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 10px;
-    transition: background 0.2s;
+    background: rgba(255, 255, 255, 0.25) !important;
+    border-radius: 10px !important;
 }
 
 .list-container::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.5) !important;
 }
 
-/* Para Firefox */
+/* Suporte para Firefox */
 .list-container {
-    scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.2) rgba(0, 0, 0, 0.1);
+    scrollbar-width: thin !important;
+    scrollbar-color: rgba(255, 255, 255, 0.25) rgba(0, 0, 0, 0.15) !important;
 }
-.tag-2-players      { background-color: #16a085; }
-.tag-ship           { background-color: #e84393; }
