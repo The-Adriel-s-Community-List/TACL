@@ -347,3 +347,42 @@ html, body, #app, .page-list-wrapper {
     scrollbar-width: thin !important;
     scrollbar-color: rgba(255, 255, 255, 0.25) rgba(0, 0, 0, 0.15) !important;
 }
+
+/* Força a coluna da esquerda a ter um tamanho fixo baseado na janela e ativar o scroll interno */
+.page-list {
+    max-height: calc(100vh - 90px) !important;
+    overflow: hidden !important;
+}
+
+.list-container {
+    height: 100% !important;
+    max-height: calc(100vh - 100px) !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding-right: 4px !important;
+}
+
+/* Estilo moderno e minimalista para a scrollbar (Chrome, Edge, Safari) */
+.list-container::-webkit-scrollbar {
+    width: 6px !important;
+}
+
+.list-container::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2) !important;
+    border-radius: 8px !important;
+}
+
+.list-container::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3) !important;
+    border-radius: 8px !important;
+}
+
+.list-container::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5) !important;
+}
+
+/* Suporte para Firefox */
+.list-container {
+    scrollbar-width: thin !important;
+    scrollbar-color: rgba(255, 255, 255, 0.3) rgba(0, 0, 0, 0.2) !important;
+}
