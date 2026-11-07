@@ -71,22 +71,46 @@ export default {
                     <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 24px; display: flex; flex-direction: column; gap: 16px;">
                         <div>
                             <h2 style="font-size: 1.25rem; font-weight: bold; margin: 0;">Editar Perfil</h2>
-                            <p style="color: #888; font-size: 0.85rem; margin-top: 4px; margin-bottom: 0;">Atualize seu nome de exibição e foto de perfil.</p>
+                            <p style="color: #888; font-size: 0.85rem; margin-top: 4px; margin-bottom: 0;">Altere seu nome e foto (aparecerão na Leaderboard!).</p>
+                        </div>
+
+                        <!-- PREVIEW E UPLOAD DE IMAGEM -->
+                        <div style="display: flex; align-items: center; gap: 14px; padding: 12px; background: rgba(0,0,0,0.25); border-radius: 8px; border: 1px solid rgba(255,255,255,0.06);">
+                            <img 
+                                :src="form.avatar_url || currentAvatar" 
+                                style="width: 58px; height: 58px; border-radius: 50%; object-fit: cover; border: 2px solid #5865F2; background: #27272a; flex-shrink: 0;"
+                                alt="Preview"
+                            />
+                            <div style="display: flex; flex-direction: column; gap: 6px;">
+                                <label style="background: #3b82f6; color: #fff; padding: 7px 14px; border-radius: 6px; font-size: 0.85rem; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; width: fit-content;">
+                                    <span>📁</span>
+                                    <span>{{ uploadingAvatar ? 'Enviando...' : 'Fazer Upload de Foto' }}</span>
+                                    <input 
+                                        type="file" 
+                                        accept="image/png, image/jpeg, image/webp, image/gif" 
+                                        @change="handleFileUpload" 
+                                        :disabled="uploadingAvatar"
+                                        style="display: none;" 
+                                    />
+                                </label>
+                                <span style="font-size: 0.75rem; color: #888;">PNG, JPG, WebP ou GIF do seu dispositivo</span>
+                            </div>
                         </div>
 
                         <form @submit.prevent="saveProfile" style="display: flex; flex-direction: column; gap: 14px;">
                             <div>
-                                <label style="display: block; font-size: 0.85rem; color: #aaa; margin-bottom: 6px;">Nome de Jogador (Nick):</label>
+                                <label style="display: block; font-size: 0.85rem; color: #aaa; margin-bottom: 6px;">Nome de Jogador na Leaderboard:</label>
                                 <input 
                                     type="text" 
                                     v-model="form.display_name" 
                                     required 
+                                    placeholder="Ex: Sophia ou sophiz"
                                     style="width: 100%; box-sizing: border-box; background: #27272a; border: 1px solid #3f3f46; color: #fff; padding: 10px; border-radius: 6px;"
                                 />
                             </div>
 
                             <div>
-                                <label style="display: block; font-size: 0.85rem; color: #aaa; margin-bottom: 6px;">Link da Foto (Avatar URL):</label>
+                                <label style="display: block; font-size: 0.85rem; color: #aaa; margin-bottom: 6px;">Ou Link Direto da Imagem (URL):</label>
                                 <input 
                                     type="url" 
                                     v-model="form.avatar_url" 
@@ -97,10 +121,10 @@ export default {
 
                             <button 
                                 type="submit" 
-                                :disabled="savingProfile" 
-                                style="background: #3b82f6; color: #fff; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 4px;"
+                                :disabled="savingProfile || uploadingAvatar" 
+                                style="background: #10b981; color: #fff; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 4px;"
                             >
-                                {{ savingProfile ? 'Salvando...' : 'Salvar Perfil' }}
+                                {{ savingProfile ? 'Salvando...' : 'Salvar Alterações do Perfil' }}
                             </button>
                         </form>
                     </div>
@@ -488,6 +512,7 @@ export default {
             savingProfile: false,
             savingDiscord: false,
             savingPassword: false,
+            uploadingAvatar: false,
             loadingRecords: true,
             officialStats: null,
             userSubmissions: [],
@@ -507,7 +532,7 @@ export default {
             return this.form.avatar_url ||
                    this.account?.avatar_url ||
                    this.discordSession?.user?.user_metadata?.avatar_url ||
-                   'https://cdn.discordapp.com/embed/avatars/0.png';
+                   '/assets/user-shield.svg';
         },
         userHandle() {
             if (this.account?.username) {
@@ -630,6 +655,42 @@ export default {
                 this.loadingRecords = false;
             }
         },
+        async handleFileUpload(event) {
+            const file = event.target.files?.[0];
+            if (!file) return;
+
+            if (file.size > 15 * 1024 * 1024) {
+                this.feedback = { text: 'A imagem deve ter no máximo 15MB.', type: 'error' };
+                return;
+            }
+
+            this.uploadingAvatar = true;
+            this.feedback = { text: '', type: 'success' };
+
+            try {
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    const base64Data = e.target.result;
+                    try {
+                        const uploadedUrl = await auth.uploadAvatar(base64Data);
+                        this.form.avatar_url = uploadedUrl;
+                        if (this.account) {
+                            this.account.avatar_url = uploadedUrl;
+                            store.profile = this.account;
+                        }
+                        this.feedback = { text: 'Foto enviada com sucesso! Clique em "Salvar Alterações" se alterou o nome.', type: 'success' };
+                    } catch (err) {
+                        this.feedback = { text: 'Erro ao enviar foto: ' + err.message, type: 'error' };
+                    } finally {
+                        this.uploadingAvatar = false;
+                    }
+                };
+                reader.readAsDataURL(file);
+            } catch (err) {
+                this.feedback = { text: 'Erro ao ler arquivo: ' + err.message, type: 'error' };
+                this.uploadingAvatar = false;
+            }
+        },
         async saveProfile() {
             this.savingProfile = true;
             this.feedback = { text: '', type: 'success' };
@@ -637,13 +698,13 @@ export default {
             try {
                 if (this.account) {
                     const updated = await auth.updateProfile({
-                        display_name: this.form.display_name,
-                        avatar_url: this.form.avatar_url
+                        display_name: (this.form.display_name || '').trim(),
+                        avatar_url: this.form.avatar_url ? this.form.avatar_url.trim() : this.account.avatar_url
                     });
                     this.account = updated;
                     store.profile = updated;
                 }
-                this.feedback = { text: 'Perfil atualizado com sucesso!', type: 'success' };
+                this.feedback = { text: 'Perfil atualizado com sucesso! Seu nome e foto já estão atualizados na Leaderboard.', type: 'success' };
                 await this.loadAllRecords();
             } catch (err) {
                 this.feedback = { text: 'Erro ao salvar perfil: ' + err.message, type: 'error' };

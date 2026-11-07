@@ -58,6 +58,21 @@ export async function fetchEditors(dir = defaultDir) {
 export async function fetchLeaderboard() {
     const list = await fetchList();
 
+    let accounts = [];
+    try {
+        const accRes = await fetch('/data/_accounts.json?t=' + Date.now());
+        if (accRes.ok) accounts = await accRes.json();
+    } catch (e) {
+        console.warn('Erro ao carregar contas na leaderboard:', e);
+    }
+
+    const accountMap = new Map();
+    if (Array.isArray(accounts)) {
+        accounts.forEach(acc => {
+            if (acc.username) accountMap.set(acc.username.toLowerCase(), acc);
+        });
+    }
+
     const scoreMap = {};
     const errs = [];
     list.forEach(([level, err], rank) => {
@@ -123,8 +138,27 @@ export async function fetchLeaderboard() {
             .flat()
             .reduce((prev, cur) => prev + cur.score, 0);
 
+        const acc = accountMap.get(user.toLowerCase());
+        const isActivated = Boolean(acc && !acc.temp_password);
+
+        let avatar_url = null;
+        let display_name = user;
+
+        if (isActivated) {
+            display_name = acc.display_name || user;
+            if (acc.avatar_url && !acc.avatar_url.includes('cdn.discordapp.com/embed/avatars/0.png')) {
+                avatar_url = acc.avatar_url;
+            } else {
+                avatar_url = '/assets/user-shield.svg';
+            }
+        }
+
         return {
             user,
+            display_name,
+            avatar_url,
+            is_activated: isActivated,
+            discord_username: acc?.discord_username || null,
             total: round(total),
             ...scores,
         };
@@ -135,6 +169,19 @@ export async function fetchLeaderboard() {
 }
 export async function fetchCreatorLeaderboard() {
     const list = await fetchList();
+
+    let accounts = [];
+    try {
+        const accRes = await fetch('/data/_accounts.json?t=' + Date.now());
+        if (accRes.ok) accounts = await accRes.json();
+    } catch (e) {}
+
+    const accountMap = new Map();
+    if (Array.isArray(accounts)) {
+        accounts.forEach(acc => {
+            if (acc.username) accountMap.set(acc.username.toLowerCase(), acc);
+        });
+    }
 
     const creatorMap = {};
 
@@ -176,9 +223,29 @@ Object.values(creatorMap).forEach((creator) => {
     creator.levels.sort((a, b) => b.points - a.points);
 });
     return Object.values(creatorMap)
-        .map((creator) => ({
-            ...creator,
-            total: round(creator.total),
-        }))
+        .map((creator) => {
+            const acc = accountMap.get(creator.creator.toLowerCase());
+            const isActivated = Boolean(acc && !acc.temp_password);
+
+            let avatar_url = null;
+            let display_name = creator.creator;
+
+            if (isActivated) {
+                display_name = acc.display_name || creator.creator;
+                if (acc.avatar_url && !acc.avatar_url.includes('cdn.discordapp.com/embed/avatars/0.png')) {
+                    avatar_url = acc.avatar_url;
+                } else {
+                    avatar_url = '/assets/user-shield.svg';
+                }
+            }
+
+            return {
+                ...creator,
+                display_name,
+                avatar_url,
+                is_activated: isActivated,
+                total: round(creator.total),
+            };
+        })
         .sort((a, b) => b.total - a.total);
 }

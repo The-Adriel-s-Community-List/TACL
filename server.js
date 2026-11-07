@@ -15,14 +15,15 @@ const HOST = process.env.HOST || '0.0.0.0';
 app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Allow-Headers', '*');
     if (req.method === 'OPTIONS') {
         return res.status(200).end();
     }
     next();
 });
 
-app.use(express.json());
+app.use(express.json({ limit: '25mb' }));
+app.use(express.urlencoded({ extended: true, limit: '25mb' }));
 
 // Prevent stale caching of scripts, data, and API responses
 app.use((req, res, next) => {
@@ -123,7 +124,7 @@ function initMigrationAccounts() {
                         id: crypto.randomUUID(),
                         username: player,
                         display_name: player,
-                        avatar_url: 'https://cdn.discordapp.com/embed/avatars/0.png',
+                        avatar_url: null,
                         salt,
                         password_hash: passwordHash,
                         temp_password: tempPassword,
@@ -189,7 +190,7 @@ function sanitizeUser(u) {
         id: u.id,
         username: u.username,
         display_name: u.display_name || u.username,
-        avatar_url: u.avatar_url || 'https://cdn.discordapp.com/embed/avatars/0.png',
+        avatar_url: u.avatar_url || (!u.temp_password ? '/assets/user-shield.svg' : null),
         discord_id: u.discord_id || null,
         discord_username: u.discord_username || null,
         has_temp_password: Boolean(u.temp_password)
@@ -288,13 +289,58 @@ app.post('/api/auth/login', (req, res) => {
     }
 });
 
+// Uploads directory for custom avatars
+const UPLOADS_DIR = path.join(__dirname, 'uploads');
+if (!fs.existsSync(path.join(UPLOADS_DIR, 'avatars'))) {
+    fs.mkdirSync(path.join(UPLOADS_DIR, 'avatars'), { recursive: true });
+}
+app.use('/uploads', express.static(UPLOADS_DIR));
+
 // Current User Profile
 app.get('/api/auth/me', authMiddleware, (req, res) => {
     return res.json({ user: sanitizeUser(req.user) });
 });
 
-// Update Profile
-app.post('/api/auth/update-profile', authMiddleware, (req, res) => {
+// Upload custom avatar image
+app.post(['/api/upload-avatar', '/api/upload-avatar/'], authMiddleware, (req, res) => {
+    try {
+        const { image } = req.body || {};
+        if (!image || typeof image !== 'string') {
+            return res.status(400).json({ error: 'Nenhuma imagem enviada.' });
+        }
+
+        const matches = image.match(/^data:image\/([a-zA-Z0-9+]+);base64,(.+)$/);
+        if (!matches) {
+            return res.status(400).json({ error: 'Formato de imagem inválido. Envie PNG, JPG ou WebP.' });
+        }
+
+        const ext = matches[1] === 'jpeg' ? 'jpg' : matches[1];
+        const buffer = Buffer.from(matches[2], 'base64');
+        const filename = `avatar-${req.user.username.replace(/[^a-zA-Z0-9]/g, '')}-${Date.now()}.${ext}`;
+        const avatarsDir = path.join(UPLOADS_DIR, 'avatars');
+        if (!fs.existsSync(avatarsDir)) {
+            fs.mkdirSync(avatarsDir, { recursive: true });
+        }
+        fs.writeFileSync(path.join(avatarsDir, filename), buffer);
+
+        const avatarUrl = `/uploads/avatars/${filename}`;
+
+        const accounts = loadAccounts();
+        const index = accounts.findIndex(a => a.id === req.user.id);
+        if (index !== -1) {
+            accounts[index].avatar_url = avatarUrl;
+            saveAccounts(accounts);
+        }
+
+        return res.json({ ok: true, url: avatarUrl, user: sanitizeUser(accounts[index] || req.user) });
+    } catch (err) {
+        console.error('Upload avatar error:', err);
+        return res.status(500).json({ error: 'Erro ao salvar foto de perfil.' });
+    }
+});
+
+// Handler for Update Profile
+const handleUpdateProfile = (req, res) => {
     try {
         const { display_name, avatar_url, new_password } = req.body || {};
         const accounts = loadAccounts();
@@ -327,10 +373,12 @@ app.post('/api/auth/update-profile', authMiddleware, (req, res) => {
         console.error('Update profile error:', err);
         return res.status(500).json({ error: 'Erro no servidor ao atualizar perfil.' });
     }
-});
+};
 
-// Link Discord
-app.post('/api/auth/link-discord', authMiddleware, (req, res) => {
+app.all(['/api/auth/update-profile', '/api/auth/update-profile/'], authMiddleware, handleUpdateProfile);
+
+// Handler for Link Discord
+const handleLinkDiscord = (req, res) => {
     try {
         const { discord_id, discord_username, discord_avatar } = req.body || {};
         const accounts = loadAccounts();
@@ -357,10 +405,12 @@ app.post('/api/auth/link-discord', authMiddleware, (req, res) => {
         console.error('Link discord error:', err);
         return res.status(500).json({ error: 'Erro no servidor ao vincular Discord.' });
     }
-});
+};
+
+app.all(['/api/auth/link-discord', '/api/auth/link-discord/'], authMiddleware, handleLinkDiscord);
 
 // List Migration Accounts for Mod Panel
-app.get('/api/auth/migration-accounts', (req, res) => {
+app.get(['/api/auth/migration-accounts', '/api/auth/migration-accounts/'], (req, res) => {
     const accounts = loadAccounts();
     const list = accounts.map(a => ({
         user: a.username,

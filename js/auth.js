@@ -143,7 +143,7 @@ export const auth = {
         const currentUser = JSON.parse(localStorage.getItem('tacl_user') || '{}');
         const updatedUser = {
             ...currentUser,
-            display_name: updates.display_name || currentUser.display_name,
+            display_name: updates.display_name !== undefined ? updates.display_name : currentUser.display_name,
             avatar_url: updates.avatar_url !== undefined ? updates.avatar_url : currentUser.avatar_url,
             has_temp_password: updates.new_password ? false : currentUser.has_temp_password
         };
@@ -152,8 +152,7 @@ export const auth = {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`,
-                'x-user-id': currentUser.id || ''
+                'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({
                 ...updates,
@@ -176,6 +175,38 @@ export const auth = {
         return savedUser;
     },
 
+    async uploadAvatar(base64Image) {
+        const token = localStorage.getItem('tacl_token') || 'local_session';
+        const currentUser = JSON.parse(localStorage.getItem('tacl_user') || '{}');
+
+        const res = await fetch('/api/upload-avatar', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                image: base64Image,
+                user_id: currentUser.id
+            })
+        });
+
+        const text = await res.text();
+        let data = {};
+        if (text) {
+            try { data = JSON.parse(text); } catch (e) {}
+        }
+
+        if (!res.ok) {
+            throw new Error(data.error || `Erro no upload da foto (${res.status}).`);
+        }
+
+        if (data.user) {
+            localStorage.setItem('tacl_user', JSON.stringify(data.user));
+        }
+        return data.url;
+    },
+
     async linkDiscord(discordData) {
         const token = localStorage.getItem('tacl_token') || 'local_session';
         const currentUser = JSON.parse(localStorage.getItem('tacl_user') || '{}');
@@ -190,8 +221,7 @@ export const auth = {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`,
-                'x-user-id': currentUser.id || ''
+                'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({
                 ...discordData,
