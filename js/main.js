@@ -35,7 +35,7 @@ const app = Vue.createApp({
     },
     async mounted() {
         // Checa login da conta local do TACL
-        const localUser = await auth.getProfile();
+        let localUser = await auth.getProfile();
         if (localUser) {
             this.user = localUser;
             store.profile = localUser;
@@ -45,19 +45,44 @@ const app = Vue.createApp({
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
             store.isMod = await this.checkIsMod(session);
-            if (!localUser) {
-                this.user = session.user;
-                this.loadProfile(session);
+            if (!localUser || !localUser.discord_id) {
+                const discordId = session.user.user_metadata?.sub || session.user.id;
+                const discordUsername = session.user.user_metadata?.custom_claims?.global_name ||
+                                        session.user.user_metadata?.full_name ||
+                                        session.user.user_metadata?.name || '';
+                const discordAvatar = session.user.user_metadata?.avatar_url || '';
+                try {
+                    const synced = await auth.loginWithDiscordData({
+                        discord_id: discordId,
+                        discord_username: discordUsername,
+                        discord_avatar: discordAvatar
+                    });
+                    this.user = synced;
+                    store.profile = synced;
+                    localUser = synced;
+                } catch (e) {
+                    this.user = session.user;
+                }
             }
         }
 
         supabase.auth.onAuthStateChange(async (_event, session) => {
             if (session) {
                 store.isMod = await this.checkIsMod(session);
-                const currentLocal = await auth.getProfile();
-                if (!currentLocal) {
-                    this.user = session.user;
-                    setTimeout(() => this.loadProfile(session), 0);
+                const discordId = session.user.user_metadata?.sub || session.user.id;
+                const discordUsername = session.user.user_metadata?.custom_claims?.global_name ||
+                                        session.user.user_metadata?.full_name || '';
+                const discordAvatar = session.user.user_metadata?.avatar_url || '';
+                try {
+                    const synced = await auth.loginWithDiscordData({
+                        discord_id: discordId,
+                        discord_username: discordUsername,
+                        discord_avatar: discordAvatar
+                    });
+                    this.user = synced;
+                    store.profile = synced;
+                } catch (e) {
+                    console.warn('Erro ao sincronizar login do Discord no onAuthStateChange:', e);
                 }
             } else {
                 store.isMod = false;
@@ -73,13 +98,10 @@ const app = Vue.createApp({
     methods: {
         async loadProfile(session) {
             if (!session) return;
-            const { data } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('user_id', session.user.id)
-                .maybeSingle();
-            if (data && !store.profile) {
-                store.profile = data;
+            const current = await auth.getProfile();
+            if (current) {
+                store.profile = current;
+                this.user = current;
             }
         },
         async checkIsMod(session) {
@@ -109,14 +131,46 @@ const app = Vue.createApp({
             }
         },
         async loginWithDiscord() {
-            const { error } = await supabase.auth.signInWithOAuth({
-                provider: 'discord',
-                options: {
-                    scopes: 'identify guilds guilds.members.read',
-                    redirectTo: window.location.origin + window.location.pathname
+            try {
+                const { data, error } = await supabase.auth.signInWithOAuth({
+                    provider: 'discord',
+                    options: {
+                        skipBrowserRedirect: true,
+                        scopes: 'identify guilds guilds.members.read',
+                        redirectTo: window.location.origin + '/auth/callback'
+                    }
+                });
+                if (error) throw error;
+                if (data?.url) {
+                    const popup = window.open(data.url, 'discord_auth_popup', 'width=600,height=750,menubar=no,toolbar=no');
+                    if (popup) {
+                        const messageHandler = async (event) => {
+                            if (event.data?.type === 'OAUTH_AUTH_SUCCESS') {
+                                window.removeEventListener('message', messageHandler);
+                                const { data: { session } } = await supabase.auth.getSession();
+                                if (session) {
+                                    const discordId = session.user.user_metadata?.sub || session.user.id;
+                                    const discordUsername = session.user.user_metadata?.custom_claims?.global_name || session.user.user_metadata?.full_name || '';
+                                    const discordAvatar = session.user.user_metadata?.avatar_url || '';
+                                    try {
+                                        const taclUser = await auth.loginWithDiscordData({
+                                            discord_id: discordId,
+                                            discord_username: discordUsername,
+                                            discord_avatar: discordAvatar
+                                        });
+                                        this.user = taclUser;
+                                        store.profile = taclUser;
+                                    } catch (e) {}
+                                    router.push('/perfil');
+                                }
+                            }
+                        };
+                        window.addEventListener('message', messageHandler);
+                    }
                 }
-            });
-            if (error) alert('Erro ao autenticar com o Discord: ' + error.message);
+            } catch (err) {
+                alert('Erro ao autenticar com Discord: ' + (err.message || err));
+            }
         },
         async logout() {
             auth.logout();

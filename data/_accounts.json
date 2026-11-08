@@ -111,12 +111,12 @@
     "id": "886d3cbb-f939-4fcd-bdc1-e07c35f2db73",
     "username": "sophiz",
     "display_name": "sophiz",
-    "avatar_url": null,
-    "salt": "15d85fc7b1a12c8279a1e9a6220a2eb1",
-    "password_hash": "4351531a4265d10fe56b6f543855485af0c22a7f2c4b7d05fea1ff1cf5c8e2afc0dbcba760fd66097bdd8571149c54d2f1d0ea562a54fbcd915a2eda10eb08cc",
+    "avatar_url": "https://cdn.discordapp.com/avatars/1311313825194184716/sample.png",
+    "salt": "7aa1bfb0aba7b666eab0f985b94630ae",
+    "password_hash": "5d70dfffb3153f43a96441051507e7215ef04b2f12f244d553097b235dd7f87f21e40ac9853031a55be1df8e28ec69a5e031691eb1bc86ff970d7a4faf3229ef",
     "temp_password": "TACL#sophiz2026",
     "discord_id": "1311313825194184716",
-    "discord_username": "sophiz",
+    "discord_username": "𝓼𝓸𝓹𝓱𝓲𝔃",
     "created_at": "2026-11-06T20:23:48.439Z"
   },
   {

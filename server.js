@@ -149,11 +149,22 @@ function initMigrationAccounts() {
 
 initMigrationAccounts();
 
-// Middleware to authenticate Bearer token
+function normalizeName(name) {
+    if (!name || typeof name !== 'string') return '';
+    return name
+        .normalize('NFKD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .trim();
+}
+
+// Middleware to authenticate Bearer token or identification parameters
 function authMiddleware(req, res, next) {
     const accounts = loadAccounts();
     const header = req.headers.authorization;
     const xUserId = req.headers['x-user-id'] || req.body?.user_id;
+    const bodyUsername = req.body?.username || req.headers['x-username'];
+    const bodyDiscordId = req.body?.discord_id || req.headers['x-discord-id'];
     let userId = null;
 
     if (header && header.startsWith('Bearer ')) {
@@ -164,13 +175,23 @@ function authMiddleware(req, res, next) {
         }
         if (!userId) {
             // Check if token matches an account ID or username directly
-            const found = accounts.find(a => a.id === token || a.username.toLowerCase() === token.toLowerCase());
+            const found = accounts.find(a => a.id === token || normalizeName(a.username) === normalizeName(token));
             if (found) userId = found.id;
         }
     }
 
     if (!userId && xUserId) {
-        const found = accounts.find(a => a.id === xUserId || a.username.toLowerCase() === String(xUserId).toLowerCase());
+        const found = accounts.find(a => a.id === xUserId || normalizeName(a.username) === normalizeName(String(xUserId)));
+        if (found) userId = found.id;
+    }
+
+    if (!userId && bodyUsername) {
+        const found = accounts.find(a => normalizeName(a.username) === normalizeName(String(bodyUsername)));
+        if (found) userId = found.id;
+    }
+
+    if (!userId && bodyDiscordId) {
+        const found = accounts.find(a => a.discord_id && String(a.discord_id) === String(bodyDiscordId));
         if (found) userId = found.id;
     }
 
@@ -289,6 +310,98 @@ app.post('/api/auth/login', (req, res) => {
     }
 });
 
+// Discord Login / Auto-Sync Endpoint
+app.post(['/api/auth/discord-login', '/api/auth/discord-login/'], (req, res) => {
+    try {
+        const { discord_id, discord_username, discord_avatar } = req.body || {};
+        if (!discord_id && !discord_username) {
+            return res.status(400).json({ error: 'Dados do Discord insuficientes.' });
+        }
+
+        const accounts = loadAccounts();
+        const strDiscordId = discord_id ? String(discord_id).trim() : null;
+        const normDiscordUsername = normalizeName(discord_username);
+
+        // 1. Match by Discord Snowflake ID
+        let matchedAccount = null;
+        if (strDiscordId) {
+            matchedAccount = accounts.find(a => a.discord_id && String(a.discord_id) === strDiscordId);
+        }
+
+        // 2. Match by normalized Discord username
+        if (!matchedAccount && normDiscordUsername) {
+            matchedAccount = accounts.find(a => a.discord_username && normalizeName(a.discord_username) === normDiscordUsername);
+        }
+
+        // 3. Match by normalized TACL username (e.g. sophiz matches sophiz)
+        if (!matchedAccount && normDiscordUsername) {
+            matchedAccount = accounts.find(a => normalizeName(a.username) === normDiscordUsername);
+        }
+
+        // 4. Match by normalized display_name
+        if (!matchedAccount && normDiscordUsername) {
+            matchedAccount = accounts.find(a => a.display_name && normalizeName(a.display_name) === normDiscordUsername);
+        }
+
+        if (matchedAccount) {
+            // Update discord metadata if missing or changed
+            if (strDiscordId && (!matchedAccount.discord_id || matchedAccount.discord_id !== strDiscordId)) {
+                matchedAccount.discord_id = strDiscordId;
+            }
+            if (discord_username && (!matchedAccount.discord_username || matchedAccount.discord_username !== discord_username)) {
+                matchedAccount.discord_username = discord_username;
+            }
+            if (discord_avatar && typeof discord_avatar === 'string' && (!matchedAccount.avatar_url || !matchedAccount.avatar_url.startsWith('/uploads/'))) {
+                matchedAccount.avatar_url = discord_avatar;
+            }
+
+            saveAccounts(accounts);
+
+            const token = crypto.randomBytes(32).toString('hex');
+            sessions.set(token, matchedAccount.id);
+            saveSessions(sessions);
+
+            console.log(`[AUTH] Login com Discord vinculado para o jogador: ${matchedAccount.username} (${matchedAccount.id})`);
+            return res.json({
+                token,
+                user: sanitizeUser(matchedAccount)
+            });
+        }
+
+        // If not found in existing accounts, register new account automatically
+        const cleanUsername = normDiscordUsername || `user_${strDiscordId ? strDiscordId.slice(-4) : Date.now().toString().slice(-4)}`;
+        const salt = crypto.randomBytes(16).toString('hex');
+        const newAccount = {
+            id: crypto.randomUUID(),
+            username: cleanUsername,
+            display_name: discord_username || cleanUsername,
+            avatar_url: discord_avatar || 'https://cdn.discordapp.com/embed/avatars/0.png',
+            salt,
+            password_hash: '',
+            temp_password: null,
+            discord_id: strDiscordId,
+            discord_username: discord_username || null,
+            created_at: new Date().toISOString()
+        };
+
+        accounts.push(newAccount);
+        saveAccounts(accounts);
+
+        const token = crypto.randomBytes(32).toString('hex');
+        sessions.set(token, newAccount.id);
+        saveSessions(sessions);
+
+        console.log(`[AUTH] Nova conta criada via Discord: ${newAccount.username}`);
+        return res.json({
+            token,
+            user: sanitizeUser(newAccount)
+        });
+    } catch (err) {
+        console.error('Discord login error:', err);
+        return res.status(500).json({ error: 'Erro no servidor ao autenticar com Discord.' });
+    }
+});
+
 // Uploads directory for custom avatars
 const UPLOADS_DIR = path.join(__dirname, 'uploads');
 if (!fs.existsSync(path.join(UPLOADS_DIR, 'avatars'))) {
@@ -297,12 +410,15 @@ if (!fs.existsSync(path.join(UPLOADS_DIR, 'avatars'))) {
 app.use('/uploads', express.static(UPLOADS_DIR));
 
 // Current User Profile
-app.get('/api/auth/me', authMiddleware, (req, res) => {
+app.get(['/api/auth/me', '/api/auth/me/'], authMiddleware, (req, res) => {
     return res.json({ user: sanitizeUser(req.user) });
 });
 
 // Upload custom avatar image
-app.post(['/api/upload-avatar', '/api/upload-avatar/'], authMiddleware, (req, res) => {
+app.all(['/api/upload-avatar', '/api/upload-avatar/'], authMiddleware, (req, res) => {
+    if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Método não permitido.' });
+    }
     try {
         const { image } = req.body || {};
         if (!image || typeof image !== 'string') {
@@ -339,7 +455,7 @@ app.post(['/api/upload-avatar', '/api/upload-avatar/'], authMiddleware, (req, re
     }
 });
 
-// Handler for Update Profile
+// Handler for Update Profile & Password
 const handleUpdateProfile = (req, res) => {
     try {
         const { display_name, avatar_url, new_password } = req.body || {};
@@ -375,7 +491,12 @@ const handleUpdateProfile = (req, res) => {
     }
 };
 
-app.all(['/api/auth/update-profile', '/api/auth/update-profile/'], authMiddleware, handleUpdateProfile);
+app.all([
+    '/api/auth/update-profile',
+    '/api/auth/update-profile/',
+    '/api/auth/change-password',
+    '/api/auth/change-password/'
+], authMiddleware, handleUpdateProfile);
 
 // Handler for Link Discord
 const handleLinkDiscord = (req, res) => {
@@ -394,7 +515,7 @@ const handleLinkDiscord = (req, res) => {
         if (discord_username !== undefined) {
             accounts[index].discord_username = discord_username ? String(discord_username).trim() : null;
         }
-        if (discord_avatar && typeof discord_avatar === 'string' && !accounts[index].avatar_url?.startsWith('http')) {
+        if (discord_avatar && typeof discord_avatar === 'string' && !accounts[index].avatar_url?.startsWith('/uploads/')) {
             accounts[index].avatar_url = discord_avatar;
         }
 

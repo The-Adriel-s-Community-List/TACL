@@ -180,6 +180,20 @@ export default {
                                 window.removeEventListener('message', messageHandler);
                                 const { data: { session } } = await supabase.auth.getSession();
                                 if (session) {
+                                    const discordId = session.user.user_metadata?.sub || session.user.id;
+                                    const discordUsername = session.user.user_metadata?.custom_claims?.global_name || session.user.user_metadata?.full_name || '';
+                                    const discordAvatar = session.user.user_metadata?.avatar_url || '';
+                                    try {
+                                        const taclUser = await auth.loginWithDiscordData({
+                                            discord_id: discordId,
+                                            discord_username: discordUsername,
+                                            discord_avatar: discordAvatar
+                                        });
+                                        store.profile = taclUser;
+                                        this.$root.user = taclUser;
+                                    } catch (err) {
+                                        console.warn('Erro ao sincronizar login do discord:', err);
+                                    }
                                     this.$router.push('/perfil');
                                 }
                             }

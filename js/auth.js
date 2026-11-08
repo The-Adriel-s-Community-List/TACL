@@ -138,6 +138,36 @@ export const auth = {
         try { return JSON.parse(localStorage.getItem('tacl_user')); } catch (e) { return null; }
     },
 
+    async loginWithDiscordData(discordData) {
+        try {
+            const res = await fetch('/api/auth/discord-login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(discordData)
+            });
+
+            const text = await res.text();
+            let data = {};
+            if (text) {
+                try { data = JSON.parse(text); } catch (e) {}
+            }
+
+            if (!res.ok) {
+                throw new Error(data.error || `Erro ao autenticar com Discord (${res.status}).`);
+            }
+
+            if (data.token && data.user) {
+                localStorage.setItem('tacl_token', data.token);
+                localStorage.setItem('tacl_user', JSON.stringify(data.user));
+                return data.user;
+            }
+            throw new Error('Resposta inválida do servidor.');
+        } catch (err) {
+            console.error('loginWithDiscordData error:', err);
+            throw err;
+        }
+    },
+
     async updateProfile(updates) {
         const token = localStorage.getItem('tacl_token') || 'local_session';
         const currentUser = JSON.parse(localStorage.getItem('tacl_user') || '{}');
@@ -152,11 +182,16 @@ export const auth = {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${token}`,
+                'x-user-id': currentUser.id || '',
+                'x-username': currentUser.username || '',
+                'x-discord-id': currentUser.discord_id || ''
             },
             body: JSON.stringify({
                 ...updates,
-                user_id: currentUser.id
+                user_id: currentUser.id,
+                username: currentUser.username,
+                discord_id: currentUser.discord_id
             })
         });
 

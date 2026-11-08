@@ -561,9 +561,39 @@ export default {
         // Escuta popup de autenticação Discord
         window.addEventListener('message', this.handleOAuthMessage);
 
-        const account = await auth.getProfile();
+        let account = await auth.getProfile();
         const { data: { session } } = await supabase.auth.getSession();
         this.discordSession = session;
+
+        // Se o usuário está logado via Discord, sincroniza com a conta oficial do TACL
+        if (session?.user?.app_metadata?.provider === 'discord') {
+            const discordId = session.user.user_metadata?.sub || session.user.id;
+            const discordName = session.user.user_metadata?.custom_claims?.global_name ||
+                                session.user.user_metadata?.full_name ||
+                                session.user.user_metadata?.name || '';
+            const discordAvatar = session.user.user_metadata?.avatar_url;
+
+            // Se não temos conta TACL local carregada OU o discord_id não coincide:
+            if (!account || !account.discord_id || account.discord_id !== discordId) {
+                try {
+                    account = await auth.loginWithDiscordData({
+                        discord_id: discordId,
+                        discord_username: discordName,
+                        discord_avatar: discordAvatar
+                    });
+                } catch (e) {
+                    console.warn('Erro ao sincronizar sessão Discord com TACL:', e);
+                }
+            } else if (account) {
+                try {
+                    account = await auth.linkDiscord({
+                        discord_id: discordId,
+                        discord_username: discordName,
+                        discord_avatar: discordAvatar
+                    });
+                } catch (e) {}
+            }
+        }
 
         if (!account && !session) {
             this.$router.push('/login');
@@ -571,22 +601,8 @@ export default {
         }
 
         this.account = account;
-
-        // Auto-vincula se o usuário voltou do Discord OAuth
-        if (account && session?.user?.app_metadata?.provider === 'discord') {
-            const discordId = session.user.user_metadata?.sub;
-            const discordName = session.user.user_metadata?.custom_claims?.global_name || session.user.user_metadata?.full_name;
-            const discordAvatar = session.user.user_metadata?.avatar_url;
-            try {
-                this.account = await auth.linkDiscord({
-                    discord_id: discordId,
-                    discord_username: discordName,
-                    discord_avatar: discordAvatar
-                });
-            } catch (e) {
-                console.warn('Erro ao auto-vincular Discord:', e);
-            }
-        }
+        store.profile = account;
+        this.$root.user = account;
 
         this.form.display_name = this.account?.display_name || this.account?.username || session?.user?.user_metadata?.full_name || '';
         this.form.avatar_url = this.account?.avatar_url || session?.user?.user_metadata?.avatar_url || '';
@@ -605,15 +621,18 @@ export default {
                 const { data: { session } } = await supabase.auth.getSession();
                 if (session) {
                     this.discordSession = session;
-                    const discordId = session.user.user_metadata?.sub;
-                    const discordName = session.user.user_metadata?.custom_claims?.global_name || session.user.user_metadata?.full_name;
+                    const discordId = session.user.user_metadata?.sub || session.user.id;
+                    const discordName = session.user.user_metadata?.custom_claims?.global_name || session.user.user_metadata?.full_name || '';
                     const discordAvatar = session.user.user_metadata?.avatar_url;
                     try {
-                        this.account = await auth.linkDiscord({
+                        const updated = await auth.linkDiscord({
                             discord_id: discordId,
                             discord_username: discordName,
                             discord_avatar: discordAvatar
                         });
+                        this.account = updated;
+                        store.profile = updated;
+                        this.$root.user = updated;
                         this.form.discord_username = discordName;
                         this.form.discord_id = discordId;
                         this.feedback = { text: 'Discord vinculado com sucesso pelo pop-up!', type: 'success' };
@@ -629,10 +648,18 @@ export default {
                 // 1. Carrega recordes oficiais da leaderboard (dados estáticos /data/*.json)
                 const [leaderboard] = await fetchLeaderboard();
                 if (leaderboard) {
-                    const searchName = (this.account?.username || this.currentDisplayName || '').toLowerCase().trim();
-                    const found = leaderboard.find(entry => entry.user.toLowerCase().trim() === searchName);
+                    const primaryUser = (this.account?.username || '').toLowerCase().trim();
+                    const displayName = (this.currentDisplayName || '').toLowerCase().trim();
+                    const normPrimary = primaryUser.normalize('NFKD').replace(/[\u0300-\u036f]/g, '');
+                    const normDisplay = displayName.normalize('NFKD').replace(/[\u0300-\u036f]/g, '');
+
+                    const found = leaderboard.find(entry => {
+                        const u = entry.user.toLowerCase().trim();
+                        return u === primaryUser || u === displayName || u === normPrimary || u === normDisplay;
+                    });
+
                     if (found) {
-                        const rank = leaderboard.findIndex(e => e.user.toLowerCase().trim() === searchName) + 1;
+                        const rank = leaderboard.findIndex(e => e.user.toLowerCase().trim() === found.user.toLowerCase().trim()) + 1;
                         this.officialStats = {
                             rank,
                             ...found
@@ -641,11 +668,16 @@ export default {
                 }
 
                 // 2. Carrega submissões recentes do Supabase
-                const nick = this.currentDisplayName;
+                const searchNicks = [
+                    this.account?.username,
+                    this.account?.display_name,
+                    this.currentDisplayName
+                ].filter(Boolean);
+
                 const { data } = await supabase
                     .from('submissions')
                     .select('*')
-                    .eq('user_name', nick)
+                    .in('user_name', searchNicks)
                     .order('id', { ascending: false });
 
                 this.userSubmissions = data || [];
@@ -782,13 +814,14 @@ export default {
             this.feedback = { text: '', type: 'success' };
 
             try {
-                if (this.account) {
-                    const updated = await auth.updateProfile({
-                        new_password: this.newPassword
-                    });
-                    this.account = updated;
-                    store.profile = updated;
-                }
+                const updated = await auth.updateProfile({
+                    new_password: this.newPassword,
+                    user_id: this.account?.id,
+                    username: this.account?.username
+                });
+                this.account = updated;
+                store.profile = updated;
+                this.$root.user = updated;
                 this.feedback = { text: 'Senha alterada com sucesso! Senha provisória removida.', type: 'success' };
                 this.newPassword = '';
             } catch (err) {
